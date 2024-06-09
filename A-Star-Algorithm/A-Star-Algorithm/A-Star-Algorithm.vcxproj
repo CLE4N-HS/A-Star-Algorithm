@@ -133,12 +133,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="customMath.c" />
+    <ClCompile Include="hud.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="map.c" />
     <ClCompile Include="tools.c" />
     <ClCompile Include="windowManager.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="customMath.h" />
+    <ClInclude Include="hud.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="windowManager.h" />

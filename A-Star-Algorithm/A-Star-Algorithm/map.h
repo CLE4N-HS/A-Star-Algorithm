@@ -8,7 +8,7 @@
 #define BLOCK_LENGTH 32
 
 typedef enum {
-	TILE_PATH,
+	TILE_PATH = 0,
 	TILE_WALL,
 	TILE_START,
 	TILE_FINISH,
@@ -27,3 +27,5 @@ typedef struct {
 void initMap();
 void updateMap(Window* _window);
 void displayMap(Window* _window);
+
+sfColor getTileColor(TileTypes _type);

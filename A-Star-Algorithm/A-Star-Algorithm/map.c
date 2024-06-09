@@ -48,7 +48,7 @@ void updateMap(Window* _window)
 
 void displayMap(Window* _window)
 {
-	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS, WINDOW_HEIGHT / 1.75f - (float)mapYSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS);
+	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN, WINDOW_HEIGHT / 1.75f - (float)mapYSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN);
 
 	for (int j = 0; j < mapYSize; j++)
 	{
@@ -60,4 +60,9 @@ void displayMap(Window* _window)
 			sfRenderTexture_drawRectangleShape(_window->renderTexture, mapRectangle, NULL);
 		}
 	}
+}
+
+sfColor getTileColor(TileTypes _type)
+{
+	return blockColor[_type];
 }

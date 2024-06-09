@@ -1,5 +1,6 @@
 #include "windowManager.h"
 #include "map.h"
+#include "hud.h"
 
 sfSprite* windowSprite;
 sfTexture* windowTexture;
@@ -23,6 +24,7 @@ void initWindow()
 	initTools();
 	
 	initMap();
+	initHud();
 }
 
 void updateWindow(Window* _window)
@@ -38,6 +40,7 @@ void updateWindow(Window* _window)
 	}
 
 	updateMap(_window);
+	updateHud(_window);
 }
 
 void displayWindow(Window* _window)
@@ -46,7 +49,8 @@ void displayWindow(Window* _window)
 	sfRenderTexture_clear(_window->renderTexture, sfBlack);
 
 	displayMap(_window);
-
+	displayHud(_window);
+	
 	sfRenderTexture_display(_window->renderTexture);
 	sfSprite_setTexture(windowSprite, sfRenderTexture_getTexture(_window->renderTexture), sfTrue);
 	sfRenderWindow_drawSprite(_window->renderWindow, windowSprite, NULL);
