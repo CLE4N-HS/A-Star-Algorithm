@@ -1,14 +1,17 @@
 #include "hud.h"
-#include "map.h"
 #include "customMath.h"
+#include "mouseManager.h"
 
-sfVector2f hudBlockPos[TILE_NB_MAX_TYPES];
-sfColor hudBlockColor[TILE_NB_MAX_TYPES];
-char* hudTextString[TILE_NB_MAX_TYPES];
-sfVector2f hudTextPos[TILE_NB_MAX_TYPES];
+sfVector2f hudBlockPos[HUD_NB_BLOCKS];
+sfColor hudBlockColor[HUD_NB_BLOCKS];
+char* hudTextString[HUD_NB_BLOCKS];
+sfVector2f hudTextPos[HUD_NB_BLOCKS];
+sfFloatRect hudBlockBounds[HUD_NB_BLOCKS];
 
 sfRectangleShape* hudRectangle;
 sfText* hudText;
+
+TileType selectedType;
 
 void initHud()
 {
@@ -19,31 +22,48 @@ void initHud()
 	sfRectangleShape_setOutlineColor(hudRectangle, color(128, 128, 128));
 
 	hudText = sfText_create();
+	sfText_setFillColor(hudText, color(255, 255, 255));
+	sfText_setCharacterSize(hudText, 20);
+	sfText_setFont(hudText, sfFont_createFromFile(FONT_PATH"GingerSoda.ttf"));
 
 	hudTextString[TILE_PATH] = "Paths";
 	hudTextString[TILE_WALL] = "Walls";
 	hudTextString[TILE_START] = "Start";
 	hudTextString[TILE_FINISH] = "Finish";
 
-	for (int i = 0; i < TILE_NB_MAX_TYPES; i++)
-	{
-		hudBlockPos[i] = vector2f(WINDOW_LENGTH / 2.f - TILE_NB_MAX_TYPES / 2.f * i, 100.f);
-		hudBlockPos[i] = vector2f(lerp(0.f, WINDOW_LENGTH, 1.f / lerp(0.f, TILE_NB_MAX_TYPES - 1, i)), 100.f);
-		hudBlockPos[i] = vector2f( 1.f / lerp(0.f, TILE_NB_MAX_TYPES - 1, i) * WINDOW_LENGTH, 100.f);
-		hudBlockColor[i] = getTileColor(i);
+	hudBlockColor[TILE_PATH] = color(255, 255, 255);
+	hudBlockColor[TILE_WALL] = color(0, 0, 0);
+	hudBlockColor[TILE_START] = color(0, 255, 0);
+	hudBlockColor[TILE_FINISH] = color(255, 0, 0);
 
-		hudTextPos[i] = vector2f(WINDOW_LENGTH / 2.f - TILE_NB_MAX_TYPES / 2.f * i, 50.f);
+	for (int i = 0; i < HUD_NB_BLOCKS; i++)
+	{
+		float tmpXPos = WINDOW_LENGTH / 2.f + (HUD_BLOCK_LENGTH + HUD_BLOCK_OFFSET) * i - ((HUD_BLOCK_LENGTH + HUD_BLOCK_OFFSET) * TILE_NB_MAX_TYPES / 2.f) + HUD_BLOCK_SIZE;
+		hudBlockPos[i] = vector2f(tmpXPos, 100.f);
+		hudBlockBounds[i] = FloatRect(hudBlockPos[i].x - HUD_BLOCK_ORIGIN, hudBlockPos[i].y - HUD_BLOCK_ORIGIN, HUD_BLOCK_SIZE, HUD_BLOCK_SIZE);
+
+		hudTextPos[i] = vector2f(tmpXPos, 50.f);
 	}
+
+	selectedType = TILE_PATH;
 }
 
 void updateHud(Window* _window)
 {
+	sfVector2f mousePos = getMousePos();
 
+	for (int i = 0; i < HUD_NB_BLOCKS; i++)
+	{
+		if (sfFloatRect_contains(&hudBlockBounds[i], mousePos.x, mousePos.y)) {
+			if (leftClick())
+				selectedType = i;
+		}
+	}
 }
 
 void displayHud(Window* _window)
 {
-	for (int i = 0; i < TILE_NB_MAX_TYPES; i++)
+	for (int i = 0; i < HUD_NB_BLOCKS; i++)
 	{
 		sfText_setString(hudText, hudTextString[i]);
 		sfText_setPosition(hudText, hudTextPos[i]);
@@ -55,4 +75,9 @@ void displayHud(Window* _window)
 		sfRectangleShape_setFillColor(hudRectangle, hudBlockColor[i]);
 		sfRenderTexture_drawRectangleShape(_window->renderTexture, hudRectangle, NULL);
 	}
+}
+
+TileType getSelectedType()
+{
+	return selectedType;
 }

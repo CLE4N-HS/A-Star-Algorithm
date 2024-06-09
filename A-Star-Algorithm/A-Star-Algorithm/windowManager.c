@@ -1,6 +1,7 @@
 #include "windowManager.h"
 #include "map.h"
 #include "hud.h"
+#include "mouseManager.h"
 
 sfSprite* windowSprite;
 sfTexture* windowTexture;
@@ -9,7 +10,7 @@ Window* windowSetup()
 {
 	Window* window = malloc(sizeof(Window));
 	sfVideoMode mode = { WINDOW_LENGTH, WINDOW_HEIGHT, 32 };
-	window->renderWindow = sfRenderWindow_create(mode, "A* Algorithm", sfFullscreen, NULL);
+	window->renderWindow = sfRenderWindow_create(mode, "A* Algorithm", sfDefaultStyle, NULL);
 	window->renderTexture = sfRenderTexture_create(WINDOW_LENGTH, WINDOW_HEIGHT, sfFalse);
 	window->isDone = sfFalse;
 
@@ -25,6 +26,7 @@ void initWindow()
 	
 	initMap();
 	initHud();
+	initMouse();
 }
 
 void updateWindow(Window* _window)
@@ -38,6 +40,8 @@ void updateWindow(Window* _window)
 		if (event.type == sfEvtClosed || event.mouseButton.button == sfMouseMiddle)
 			_window->isDone = sfTrue;
 	}
+
+	updateMouse(_window);
 
 	updateMap(_window);
 	updateHud(_window);

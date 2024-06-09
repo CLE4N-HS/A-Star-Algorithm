@@ -81,11 +81,6 @@ sfVector2i V2fToV2i(sfVector2f _v)
 	return v;
 }
 
-sfVector2f getfMousePos(sfRenderWindow* _renderWindow)
-{
-	return V2iToV2f(sfMouse_getPositionRenderWindow(_renderWindow));
-}
-
 sfColor color(sfUint8 _r, sfUint8 _g, sfUint8 _b)
 {
 	sfColor c;
@@ -94,4 +89,24 @@ sfColor color(sfUint8 _r, sfUint8 _g, sfUint8 _b)
 	c.b = _b;
 	c.a = 255;
 	return c;
+}
+
+sfFloatRect FloatRect(float _left, float _top, float _width, float _height)
+{
+	sfFloatRect f;
+	f.left = _left;
+	f.top = _top;
+	f.width = _width;
+	f.height = _height;
+	return f;
+}
+
+sfIntRect IntRect(int _left, int _top, int _width, int _height)
+{
+	sfIntRect i;
+	i.left = _left;
+	i.top = _top;
+	i.width = _width;
+	i.height = _height;
+	return i;
 }
