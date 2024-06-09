@@ -35,6 +35,22 @@ sfVector2i vector2i(int _x, int _y)
 	return v;
 }
 
+sfVector2f addVectorsf(sfVector2f _v1, sfVector2f _v2)
+{
+	sfVector2f v;
+	v.x = _v1.x + _v2.x;
+	v.y = _v1.y + _v2.y;
+	return v;
+}
+
+sfVector2i addVectorsi(sfVector2i _v1, sfVector2i _v2)
+{
+	sfVector2i v;
+	v.x = _v1.x + _v2.x;
+	v.y = _v1.y + _v2.y;
+	return v;
+}
+
 sfVector2f MultiplyVector2f(sfVector2f _v, float _m)
 {
 	_v.x *= _m;
@@ -68,4 +84,14 @@ sfVector2i V2fToV2i(sfVector2f _v)
 sfVector2f getfMousePos(sfRenderWindow* _renderWindow)
 {
 	return V2iToV2f(sfMouse_getPositionRenderWindow(_renderWindow));
+}
+
+sfColor color(sfUint8 _r, sfUint8 _g, sfUint8 _b)
+{
+	sfColor c;
+	c.r = _r;
+	c.g = _g;
+	c.b = _b;
+	c.a = 255;
+	return c;
 }

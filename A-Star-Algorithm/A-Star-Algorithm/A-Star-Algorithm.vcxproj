@@ -134,10 +134,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="map.c" />
     <ClCompile Include="tools.c" />
     <ClCompile Include="windowManager.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="map.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="windowManager.h" />
   </ItemGroup>

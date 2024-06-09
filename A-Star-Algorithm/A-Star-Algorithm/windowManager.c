@@ -1,4 +1,5 @@
 #include "windowManager.h"
+#include "map.h"
 
 sfSprite* windowSprite;
 sfTexture* windowTexture;
@@ -7,7 +8,7 @@ Window* windowSetup()
 {
 	Window* window = malloc(sizeof(Window));
 	sfVideoMode mode = { WINDOW_LENGTH, WINDOW_HEIGHT, 32 };
-	window->renderWindow = sfRenderWindow_create(mode, "A* Algorithm", sfDefaultStyle, NULL);
+	window->renderWindow = sfRenderWindow_create(mode, "A* Algorithm", sfFullscreen, NULL);
 	window->renderTexture = sfRenderTexture_create(WINDOW_LENGTH, WINDOW_HEIGHT, sfFalse);
 	window->isDone = sfFalse;
 
@@ -20,6 +21,8 @@ void initWindow()
 	windowTexture = sfTexture_create(WINDOW_LENGTH, WINDOW_HEIGHT);
 
 	initTools();
+	
+	initMap();
 }
 
 void updateWindow(Window* _window)
@@ -33,12 +36,16 @@ void updateWindow(Window* _window)
 		if (event.type == sfEvtClosed || event.mouseButton.button == sfMouseMiddle)
 			_window->isDone = sfTrue;
 	}
+
+	updateMap(_window);
 }
 
 void displayWindow(Window* _window)
 {
 	sfRenderWindow_clear(_window->renderWindow, sfBlack);
 	sfRenderTexture_clear(_window->renderTexture, sfBlack);
+
+	displayMap(_window);
 
 	sfRenderTexture_display(_window->renderTexture);
 	sfSprite_setTexture(windowSprite, sfRenderTexture_getTexture(_window->renderTexture), sfTrue);
