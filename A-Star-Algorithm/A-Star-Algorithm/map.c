@@ -156,6 +156,21 @@ int getHCost(sfVector2i _index)
 	return diff * DIAGONAL_COST + (xLength - diff) * STRAIGHT_COST + (yLength - diff) * STRAIGHT_COST;
 }
 
+/// <summary>
+/// 
+/// currentNode -> get the lowest fCost in openList
+/// if currentNode is equal to finish return complete path
+/// (put currentNode in the closed list ?)
+/// remove currentNode from openList
+/// 
+/// // maybe not
+/// get all of his neighbours, put them in the openList
+/// set their parent
+/// set their gCost equal to the parent gCost + 10 or 14 if moved diagonally
+/// //
+/// 
+/// </summary>
+
 void search()
 {
 	if (!openList) {
