@@ -2,10 +2,10 @@
 #include "tools.h"
 #include "windowManager.h"
 
-#define BLOCK_SIZE 40.f
-#define BLOCK_ORIGIN 20.f
+#define BLOCK_SIZE 60.f
+#define BLOCK_ORIGIN 30.f
 #define BLOCK_OUTLINE_THICKNESS 1.f
-#define BLOCK_LENGTH 42
+#define BLOCK_LENGTH 62
 
 #define STRAIGHT_COST 10
 #define DIAGONAL_COST 14
@@ -15,6 +15,8 @@ typedef enum {
 	TILE_WALL,
 	TILE_START,
 	TILE_FINISH,
+	TILE_OPEN,
+	TILE_CLOSED,
 	TILE_NB_MAX_TYPES
 }TileType;
 
@@ -33,5 +35,11 @@ void initMap();
 void updateMap(Window* _window);
 void displayMap(Window* _window);
 
+void loadMap();
 void removeType(TileType _type);
-
+int getHCost(sfVector2i _index);
+void saveMap();
+void search();
+void resetMap();
+void defaultMap();
+sfBool isIndexInArray(sfVector2i _index);

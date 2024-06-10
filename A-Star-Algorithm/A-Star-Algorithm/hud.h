@@ -3,8 +3,6 @@
 #include "windowManager.h"
 #include "map.h"
 
-#define HUD_NB_BLOCKS TILE_NB_MAX_TYPES
-
 #define HUD_BLOCK_SIZE 60.f
 #define HUD_BLOCK_ORIGIN 30.f
 #define HUD_BLOCK_OUTLINE_THICKNESS 2.f
