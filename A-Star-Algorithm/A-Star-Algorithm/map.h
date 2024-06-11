@@ -48,3 +48,7 @@ void setNeighbours(sfVector2i* _neighbours, sfVector2i* _possibleNeighbours, int
 sfBool isNodeSolid(sfVector2i _node);
 void addNodeInOpenList(sfVector2i _node);
 void setNeighboursValues(sfVector2i* _neighbours, int _nbPath, sfVector2i _parent);
+void putNodeInClosedList(sfVector2i _node);
+void putParentInClosedList(sfVector2i _node);
+sfBool isNodeInClosedList(sfVector2i _node);
+void setSearchList();

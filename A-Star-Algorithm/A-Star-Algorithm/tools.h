@@ -27,3 +27,4 @@ sfVector2i V2fToV2i(sfVector2f _v);
 sfColor color(sfUint8 _r, sfUint8 _g, sfUint8 _b);
 sfFloatRect FloatRect(float _left, float _top, float _width, float _height);
 sfIntRect IntRect(int _left, int _top, int _width, int _height);
+sfBool equalsVectors2i(sfVector2i _v1, sfVector2i _v2);

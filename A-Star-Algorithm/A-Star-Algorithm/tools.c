@@ -110,3 +110,11 @@ sfIntRect IntRect(int _left, int _top, int _width, int _height)
 	i.height = _height;
 	return i;
 }
+
+sfBool equalsVectors2i(sfVector2i _v1, sfVector2i _v2)
+{
+	if (_v1.x == _v2.x && _v1.y == _v2.y)
+		return sfTrue;
+
+	return sfFalse;
+}
