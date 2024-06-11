@@ -43,3 +43,8 @@ void search();
 void resetMap();
 void defaultMap();
 sfBool isIndexInArray(sfVector2i _index);
+void setPossibleNeighbours(sfVector2i* _possibleNeighbours, sfVector2i _closestIndex);
+void setNeighbours(sfVector2i* _neighbours, sfVector2i* _possibleNeighbours, int* _nbPath);
+sfBool isNodeSolid(sfVector2i _node);
+void addNodeInOpenList(sfVector2i _node);
+void setNeighboursValues(sfVector2i* _neighbours, int _nbPath, sfVector2i _parent);

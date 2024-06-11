@@ -182,31 +182,31 @@ void search()
 		nbIter = 1;
 	}
 	else {
-		sfVector2i closetIndex = NULLVECTOR2I;
-		int lowestFCost = map[closetIndex.y][closetIndex.x].fCost;
+		sfVector2i closestIndex = NULLVECTOR2I;
+		int lowestFCost = map[closestIndex.y][closestIndex.x].fCost;
 		for (int i = 1; i < nbIter; i++)
 		{
 			if (map[openList[i].y][openList[i].x].fCost < lowestFCost) {
-				closetIndex = openList[i];
+				closestIndex = openList[i];
 				lowestFCost = map[openList[i].y][openList[i].x].fCost;
 			}
 		}
+
 		sfVector2i* possibleNeighbours = (sfVector2i*)calloc(8, sizeof(sfVector2i));
-		possibleNeighbours[0] = vector2i(closetIndex.x - 1, closetIndex.y - 1); // Top Left
-		possibleNeighbours[1] = vector2i(closetIndex.x    , closetIndex.y - 1); // Top
-		possibleNeighbours[2] = vector2i(closetIndex.x + 1, closetIndex.y - 1); // Top Right
-		possibleNeighbours[3] = vector2i(closetIndex.x - 1, closetIndex.y    ); // Middle Left
-		possibleNeighbours[4] = vector2i(closetIndex.x + 1, closetIndex.y    ); // Middle Right
-		possibleNeighbours[5] = vector2i(closetIndex.x - 1, closetIndex.y + 1); // Bottom Left
-		possibleNeighbours[6] = vector2i(closetIndex.x    , closetIndex.y + 1); // Bottom
-		possibleNeighbours[7] = vector2i(closetIndex.x + 1, closetIndex.y + 1); // Bottom Right
+		setPossibleNeighbours(possibleNeighbours, closestIndex);
+
+		int nbPath = 0;
+		sfVector2i* neighbours = (sfVector2i*)calloc(8, sizeof(sfVector2i));
+		setNeighbours(neighbours, possibleNeighbours, &nbPath);
+
+		setNeighboursValues(neighbours, nbPath, closestIndex);
+
+
 		
 
 
 		free(possibleNeighbours);
-
-		nbIter++;
-		openList = (sfVector2i*)realloc(openList, nbIter * sizeof(sfVector2i));
+		free(neighbours);
 	}
 }
 
@@ -277,4 +277,63 @@ sfBool isIndexInArray(sfVector2i _index)
 		return sfFalse;
 
 	return sfTrue;
+}
+
+void setPossibleNeighbours(sfVector2i* _possibleNeighbours, sfVector2i _closestIndex)
+{
+	_possibleNeighbours[0] = vector2i(_closestIndex.x - 1, _closestIndex.y - 1); // Top Left
+	_possibleNeighbours[1] = vector2i(_closestIndex.x, _closestIndex.y - 1); // Top
+	_possibleNeighbours[2] = vector2i(_closestIndex.x + 1, _closestIndex.y - 1); // Top Right
+	_possibleNeighbours[3] = vector2i(_closestIndex.x - 1, _closestIndex.y); // Middle Left
+	_possibleNeighbours[4] = vector2i(_closestIndex.x + 1, _closestIndex.y); // Middle Right
+	_possibleNeighbours[5] = vector2i(_closestIndex.x - 1, _closestIndex.y + 1); // Bottom Left
+	_possibleNeighbours[6] = vector2i(_closestIndex.x, _closestIndex.y + 1); // Bottom
+	_possibleNeighbours[7] = vector2i(_closestIndex.x + 1, _closestIndex.y + 1); // Bottom Right
+}
+
+void setNeighbours(sfVector2i* _neighbours, sfVector2i* _possibleNeighbours, int* _nbPath)
+{
+	for (int path = 0; path < 8; path++)
+	{
+		if (isIndexInArray(_possibleNeighbours[path])) {
+			if (!isNodeSolid(_possibleNeighbours[path])) {
+				_neighbours[*_nbPath] = _possibleNeighbours[path];
+				*_nbPath++;
+
+				addNodeInOpenList(_neighbours[path]);
+			}
+		}
+	}
+}
+
+sfBool isNodeSolid(sfVector2i _node)
+{
+	if (map[_node.y][_node.x].type == TILE_WALL)
+		return sfTrue;
+
+	return sfFalse;
+}
+
+void addNodeInOpenList(sfVector2i _node)
+{
+	nbIter++;
+	realloc(openList, nbIter * sizeof(sfVector2i));
+	openList[nbIter] = _node;
+}
+
+void setNeighboursValues(sfVector2i* _neighbours, int _nbPath, sfVector2i _parent)
+{
+	for (int path = 0; path < _nbPath; path++)
+	{
+		map[_neighbours[path].y][_neighbours[path].x].parent = _parent;
+
+		int distanceFromParent = 0;
+		if (abs(_neighbours[path].x) == 1 && abs(_neighbours[path].y) == 1)
+			distanceFromParent = DIAGONAL_COST;
+		else
+			distanceFromParent = STRAIGHT_COST;
+
+		map[_neighbours[path].y][_neighbours[path].x].gCost = map[_parent.y][_parent.x].gCost + distanceFromParent;
+		map[_neighbours[path].y][_neighbours[path].x].fCost = map[_neighbours[path].y][_neighbours[path].x].gCost + map[_neighbours[path].y][_neighbours[path].x].hCost;
+	}
 }
