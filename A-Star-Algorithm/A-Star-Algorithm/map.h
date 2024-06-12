@@ -17,6 +17,7 @@ typedef enum {
 	TILE_FINISH,
 	TILE_OPEN,
 	TILE_CLOSED,
+	TILE_CURRENT,
 	TILE_NB_MAX_TYPES
 }TileType;
 

@@ -14,6 +14,8 @@ Window* windowSetup()
 	window->renderTexture = sfRenderTexture_create(WINDOW_LENGTH, WINDOW_HEIGHT, sfFalse);
 	window->isDone = sfFalse;
 
+	sfRenderWindow_setFramerateLimit(window->renderWindow, 60);
+
 	return window;
 }
 
