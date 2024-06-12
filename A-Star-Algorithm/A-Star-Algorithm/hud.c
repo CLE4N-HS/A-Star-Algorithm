@@ -3,7 +3,7 @@
 #include "mouseManager.h"
 
 typedef enum {
-	HUD_PATH,
+	HUD_PATH = 0,
 	HUD_WALL,
 	HUD_START,
 	HUD_FINISH,

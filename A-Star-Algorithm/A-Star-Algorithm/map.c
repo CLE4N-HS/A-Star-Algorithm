@@ -356,7 +356,6 @@ void setNeighbours(sfVector2i* _neighbours, sfVector2i* _possibleNeighbours, int
 				_neighbours[*_nbPath] = _possibleNeighbours[path];
 				addNodeInOpenList(_neighbours[*_nbPath]);
 				*_nbPath += 1;
-				printf("add %d, %d\n", _possibleNeighbours[path].x, _possibleNeighbours[path].y);
 			}
 		}
 	}
