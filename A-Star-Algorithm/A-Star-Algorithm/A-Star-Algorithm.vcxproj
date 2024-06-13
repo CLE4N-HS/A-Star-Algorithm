@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="customMath.c" />
     <ClCompile Include="hud.c" />
+    <ClCompile Include="keyboardManager.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="map.c" />
     <ClCompile Include="mouseManager.c" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="customMath.h" />
     <ClInclude Include="hud.h" />
+    <ClInclude Include="keyboardManager.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="mouseManager.h" />
     <ClInclude Include="tools.h" />

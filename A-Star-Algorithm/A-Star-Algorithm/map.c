@@ -263,8 +263,8 @@ void displayMap(Window* _window)
 
 void loadMap()
 {
-	mapXSize = 11;
-	mapYSize = 6;
+	mapXSize = 20;
+	mapYSize = 10;
 
 	map = (Block**)calloc(mapYSize, sizeof(Block*));
 	savedMap = (Block**)calloc(mapYSize, sizeof(Block*));
@@ -326,7 +326,7 @@ void search()
 		nbNodes = 0;
 	}
 	else {
-		sfVector2i closestIndex = startIndex;
+		sfVector2i closestIndex = openList[0];
 		int lowestFCost = map[closestIndex.y][closestIndex.x].fCost;
 		sfVector2i* equalFCosts = NULL;
 		int nbEqualFCosts = 0;
@@ -433,8 +433,8 @@ void saveMap()
 
 void defaultMap()
 {
-	mapXSize = 11;
-	mapYSize = 6;
+	mapXSize = 20;
+	mapYSize = 10;
 
 	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN, WINDOW_HEIGHT / 1.75f - (float)mapYSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN);
 
@@ -604,4 +604,88 @@ void removeElementInOpenList(int _count)
 
 	nbOpenListElements--;
 	openList = (sfVector2i*)realloc(openList, nbOpenListElements * sizeof(openList));
+}
+
+void find()
+{
+	savedMap = map;
+	openList = (sfVector2i*)calloc(1, sizeof(sfVector2i));
+	openList[0] = startIndex;
+	map[openList[0].y][openList[0].x].type = TILE_OPEN;
+	map[openList[0].y][openList[0].x].gCost = 0;
+	nbOpenListElements = 1;
+	nbClosedListElements = 0;
+	nbNodes = 0;
+
+	while (1) {
+
+		if (openList == NULL)
+			return;
+
+		sfVector2i closestIndex = openList[0];
+		int lowestFCost = map[closestIndex.y][closestIndex.x].fCost;
+		sfVector2i* equalFCosts = NULL;
+		int nbEqualFCosts = 0;
+		int count = 0;
+		int* counts = NULL;
+		for (int i = 1; i < nbOpenListElements; i++)
+		{
+			if (map[openList[i].y][openList[i].x].fCost == lowestFCost) {
+				nbEqualFCosts++;
+				equalFCosts = realloc(equalFCosts, nbEqualFCosts * sizeof(sfVector2i));
+				equalFCosts[nbEqualFCosts - 1] = openList[i];
+				counts = realloc(counts, nbEqualFCosts * sizeof(int));
+				counts[nbEqualFCosts - 1] = i;
+			}
+			else if (map[openList[i].y][openList[i].x].fCost < lowestFCost) {
+				closestIndex = openList[i];
+				lowestFCost = map[openList[i].y][openList[i].x].fCost;
+				nbEqualFCosts = 0;
+				count = i;
+			}
+		}
+
+		if (nbEqualFCosts > 0) {
+			closestIndex = equalFCosts[0];
+			int lowestHCost = map[equalFCosts[0].y][equalFCosts[0].x].hCost;
+			count = counts[0];
+			for (int i = 1; i < nbEqualFCosts; i++)
+			{
+				if (map[equalFCosts[i].y][equalFCosts[i].x].hCost < lowestHCost) {
+					lowestHCost = map[equalFCosts[i].y][equalFCosts[i].x].hCost;
+					closestIndex = equalFCosts[i];
+					count = counts[i];
+				}
+			}
+		}
+
+		removeElementInOpenList(count);
+		addNodeInClosedList(closestIndex);
+
+
+		printf("%d, %d\n", closestIndex.x, closestIndex.y);
+		currentNode = closestIndex;
+		//putParentInClosedList(closestIndex);
+		if (equalsVectors2i(closestIndex, finishIndex)) {
+			printf("done !");
+			setSearchList();
+			return;
+		}
+
+		free(equalFCosts);
+
+		sfVector2i* possibleNeighbours = getPossibleNeighbours(closestIndex);
+
+		int nbNeighbours = 0;
+		sfVector2i* neighbours = getNeighbours(possibleNeighbours, &nbNeighbours);
+
+		setNeighboursValues(neighbours, nbNeighbours, closestIndex);
+
+
+
+
+
+		free(possibleNeighbours);
+		free(neighbours);
+	}
 }

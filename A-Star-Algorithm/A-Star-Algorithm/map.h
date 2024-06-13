@@ -55,3 +55,4 @@ void addNodeInClosedList(sfVector2i _node);
 sfBool isNodeInClosedList(sfVector2i _node);
 void setSearchList();
 void removeElementInOpenList(int _count);
+void find();

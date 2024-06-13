@@ -11,6 +11,7 @@ typedef enum {
 	HUD_SAVE,
 	HUD_RESET,
 	HUD_DEFAULT,
+	HUD_FIND,
 	HUD_NB_MAX_TYPES
 }HudTypes;
 
@@ -46,6 +47,7 @@ void initHud()
 	hudTextString[HUD_SAVE] = "Save";
 	hudTextString[HUD_RESET] = "Reset";
 	hudTextString[HUD_DEFAULT] = "Default";
+	hudTextString[HUD_FIND] = "Find";
 
 	hudBlockColor[HUD_PATH] = color(255, 255, 255);
 	hudBlockColor[HUD_WALL] = color(0, 0, 0);
@@ -55,6 +57,7 @@ void initHud()
 	hudBlockColor[HUD_SAVE] = color(150, 150, 150);
 	hudBlockColor[HUD_RESET] = color(100, 100, 100);
 	hudBlockColor[HUD_DEFAULT] = color(50, 50, 50);
+	hudBlockColor[HUD_FIND] = color(25, 25, 25);
 
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
@@ -82,6 +85,7 @@ void updateHud(Window* _window)
 				case HUD_SAVE:    saveMap();    break;
 				case HUD_RESET:   resetMap();   break;
 				case HUD_DEFAULT: defaultMap(); break;
+				case HUD_FIND:    find();       break;
 				default:
 					selectedType = i;
 					break;
