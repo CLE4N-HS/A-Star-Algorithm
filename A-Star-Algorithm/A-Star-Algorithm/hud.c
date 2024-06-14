@@ -12,6 +12,9 @@ typedef enum {
 	HUD_RESET,
 	HUD_DEFAULT,
 	HUD_FIND,
+	HUD_SHOW_OPEN_LIST,
+	HUD_SHOW_CLOSED_LIST,
+	HUD_SHOW_VALUES,
 	HUD_NB_MAX_TYPES
 }HudTypes;
 
@@ -20,6 +23,7 @@ sfColor hudBlockColor[HUD_NB_MAX_TYPES];
 char* hudTextString[HUD_NB_MAX_TYPES];
 sfVector2f hudTextPos[HUD_NB_MAX_TYPES];
 sfFloatRect hudBlockBounds[HUD_NB_MAX_TYPES];
+void (*hudBlockFunctions[HUD_NB_MAX_TYPES - HUD_SEARCH]) = { search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues };
 
 sfRectangleShape* hudRectangle;
 sfText* hudText;
@@ -48,6 +52,9 @@ void initHud()
 	hudTextString[HUD_RESET] = "Reset";
 	hudTextString[HUD_DEFAULT] = "Default";
 	hudTextString[HUD_FIND] = "Find";
+	hudTextString[HUD_SHOW_OPEN_LIST] = "OpenList";
+	hudTextString[HUD_SHOW_CLOSED_LIST] = "ClosedList";
+	hudTextString[HUD_SHOW_VALUES] = "Values";
 
 	hudBlockColor[HUD_PATH] = color(255, 255, 255);
 	hudBlockColor[HUD_WALL] = color(0, 0, 0);
@@ -58,6 +65,9 @@ void initHud()
 	hudBlockColor[HUD_RESET] = color(100, 100, 100);
 	hudBlockColor[HUD_DEFAULT] = color(50, 50, 50);
 	hudBlockColor[HUD_FIND] = color(25, 25, 25);
+	hudBlockColor[HUD_SHOW_OPEN_LIST] = color(0, 0, 255);
+	hudBlockColor[HUD_SHOW_CLOSED_LIST] = color(200, 50, 50);
+	hudBlockColor[HUD_SHOW_VALUES] = color(0, 255, 100);
 
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
@@ -79,6 +89,11 @@ void updateHud(Window* _window)
 	{
 		if (sfFloatRect_contains(&hudBlockBounds[i], mousePos.x, mousePos.y)) {
 			if (leftClick()) {
+				//if (i >= HUD_SEARCH)
+				//	hudBlockFunctions[i - HUD_SEARCH];
+				//else
+				//	selectedType = i;
+
 				switch (i)
 				{
 				case HUD_SEARCH:  search();     break;

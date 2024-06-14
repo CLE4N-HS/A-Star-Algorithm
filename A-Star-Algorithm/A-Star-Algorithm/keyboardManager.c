@@ -1,55 +1,44 @@
-//#include "mouseManager.h"
-//
-//typedef struct {
-//	sfVector2f pos;
-//	sfBool hasFocus;
-//	sfBool hasReleased;
-//	sfBool hasPressed;
-//	sfMouseButton button;
-//}Mouse;
-//Mouse mouse;
-//
-//void initMouse()
-//{
-//	mouse.hasFocus = sfFalse;
-//	mouse.hasReleased = sfTrue;
-//	mouse.button = sfMouseLeft;
-//	mouse.pos = NULLVECTOR2F;
-//}
-//
-//void updateMouse(Window* _window)
-//{
-//	mouse.hasFocus = sfRenderWindow_hasFocus(_window->renderWindow);
-//
-//	if (!mouse.hasReleased)
-//		mouse.hasReleased = !sfMouse_isButtonPressed(mouse.button);
-//
-//	mouse.pos = V2iToV2f(sfMouse_getPositionRenderWindow(_window->renderWindow));
-//}
-//
-//sfBool leftClick()
-//{
-//	if (mouse.hasFocus && mouse.hasReleased && sfMouse_isButtonPressed(sfMouseLeft)) {
-//		mouse.hasReleased = sfFalse;
-//		mouse.button = sfMouseLeft;
-//		return sfTrue;
-//	}
-//
-//	return sfFalse;
-//}
-//
-//sfBool leftClickUnreleased()
-//{
-//	if (mouse.hasFocus && sfMouse_isButtonPressed(sfMouseLeft)) {
-//		//mouse.hasReleased = sfFalse;
-//		mouse.button = sfMouseLeft;
-//		return sfTrue;
-//	}
-//
-//	return sfFalse;
-//}
-//
-//sfVector2f getMousePos()
-//{
-//	return mouse.pos;
-//}
+#include "keyboardManager.h"
+
+typedef struct {
+	sfBool hasFocus;
+	sfBool hasReleased;
+	sfBool hasPressed;
+	sfKeyCode key;
+}Keyboard;
+Keyboard keyboard;
+
+void initKeyboard()
+{
+	keyboard.hasFocus = sfFalse;
+	keyboard.hasReleased = sfTrue;
+	keyboard.hasPressed = sfFalse;
+	keyboard.key = sfKeySpace;
+}
+
+void updateKeyboard(Window* _window)
+{
+	keyboard.hasFocus = sfRenderWindow_hasFocus(_window->renderWindow);
+
+	if (!keyboard.hasReleased)
+		keyboard.hasReleased = !sfKeyboard_isKeyPressed(keyboard.key);
+}
+
+sfBool hasPressed(sfKeyCode _key)
+{
+	if (keyboard.hasFocus && keyboard.hasReleased && sfKeyboard_isKeyPressed(_key)) {
+		keyboard.hasReleased = sfFalse;
+		keyboard.key = _key;
+		return sfTrue;
+	}
+
+	return sfFalse;
+}
+
+sfBool isPressing(sfKeyCode _key)
+{
+	if (keyboard.hasFocus && sfKeyboard_isKeyPressed(_key))
+		return sfTrue;
+
+	return sfFalse;
+}

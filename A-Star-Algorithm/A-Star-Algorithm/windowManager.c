@@ -2,6 +2,7 @@
 #include "map.h"
 #include "hud.h"
 #include "mouseManager.h"
+#include "keyboardManager.h"
 
 sfSprite* windowSprite;
 sfTexture* windowTexture;
@@ -29,6 +30,7 @@ void initWindow()
 	initMap();
 	initHud();
 	initMouse();
+	initKeyboard();
 }
 
 void updateWindow(Window* _window)
@@ -44,6 +46,7 @@ void updateWindow(Window* _window)
 	}
 
 	updateMouse(_window);
+	updateKeyboard(_window);
 
 	updateMap(_window);
 	updateHud(_window);
