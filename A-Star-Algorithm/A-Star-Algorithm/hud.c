@@ -23,7 +23,7 @@ sfColor hudBlockColor[HUD_NB_MAX_TYPES];
 char* hudTextString[HUD_NB_MAX_TYPES];
 sfVector2f hudTextPos[HUD_NB_MAX_TYPES];
 sfFloatRect hudBlockBounds[HUD_NB_MAX_TYPES];
-void (*hudBlockFunctions[HUD_NB_MAX_TYPES - HUD_SEARCH]) = { search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues };
+void (*hudBlockFunctions[8]) = { search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues };
 
 sfRectangleShape* hudRectangle;
 sfText* hudText;
@@ -89,6 +89,7 @@ void updateHud(Window* _window)
 	{
 		if (sfFloatRect_contains(&hudBlockBounds[i], mousePos.x, mousePos.y)) {
 			if (leftClick()) {
+				// doesnt work for some reasons
 				//if (i >= HUD_SEARCH)
 				//	hudBlockFunctions[i - HUD_SEARCH];
 				//else
@@ -96,11 +97,14 @@ void updateHud(Window* _window)
 
 				switch (i)
 				{
-				case HUD_SEARCH:  search();     break;
-				case HUD_SAVE:    saveMap();    break;
-				case HUD_RESET:   resetMap();   break;
-				case HUD_DEFAULT: defaultMap(); break;
-				case HUD_FIND:    find();       break;
+				case HUD_SEARCH:           search();           break;
+				case HUD_SAVE:             saveMap();          break;
+				case HUD_RESET:            resetMap();         break;
+				case HUD_DEFAULT:          defaultMap();       break;
+				case HUD_FIND:             find();             break;
+				case HUD_SHOW_OPEN_LIST:   toggleOpenList();   break;
+				case HUD_SHOW_CLOSED_LIST: toggleClosedList(); break;
+				case HUD_SHOW_VALUES:      toggleValues();     break;
 				default:
 					selectedType = i;
 					break;
@@ -112,6 +116,8 @@ void updateHud(Window* _window)
 
 void displayHud(Window* _window)
 {
+	char buffer[30];
+
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
 		sfText_setString(hudText, hudTextString[i]);
@@ -124,6 +130,11 @@ void displayHud(Window* _window)
 		sfRectangleShape_setFillColor(hudRectangle, hudBlockColor[i]);
 		sfRenderTexture_drawRectangleShape(_window->renderTexture, hudRectangle, NULL);
 	}
+
+	sprintf(buffer, "FPS : %.0f", 1.f / getDeltaTime());
+	sfText_setString(hudText, buffer);
+	sfText_setPosition(hudText, vector2f(100.f, 100.f));
+	sfRenderTexture_drawText(_window->renderTexture, hudText, NULL);
 }
 
 TileType getSelectedType()

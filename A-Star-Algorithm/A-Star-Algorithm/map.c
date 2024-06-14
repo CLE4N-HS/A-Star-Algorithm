@@ -99,8 +99,7 @@ void updateMap(Window* _window)
 
 void displayMap(Window* _window)
 {
-	char buffer[11];
-	sfFloatRect tmpTextBounds;
+	char buffer[30];
 
 	for (int j = 0; j < mapYSize; j++)
 	{
@@ -110,30 +109,6 @@ void displayMap(Window* _window)
 			sfRectangleShape_setFillColor(mapRectangle, blockColor[map[j][i].type]);
 
 			sfRenderTexture_drawRectangleShape(_window->renderTexture, mapRectangle, NULL);
-
-			//sprintf(buffer, "%d", map[j][i].gCost);
-			//sfText_setString(mapText, buffer);
-			//sfText_setCharacterSize(mapText, 9);
-			//sfText_setPosition(mapText, addVectorsf(map[j][i].pos, vector2f(-BLOCK_ORIGIN / 2.f, -BLOCK_ORIGIN / 2.f)));
-			//tmpTextBounds = sfText_getLocalBounds(mapText);
-			//sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
-			//sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
-
-			//sprintf(buffer, "%d", map[j][i].hCost);
-			//sfText_setString(mapText, buffer);
-			//sfText_setCharacterSize(mapText, 9);
-			//sfText_setPosition(mapText, addVectorsf(map[j][i].pos, vector2f(BLOCK_ORIGIN / 2.f, -BLOCK_ORIGIN / 2.f)));
-			//tmpTextBounds = sfText_getLocalBounds(mapText);
-			//sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
-			//sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
-
-			//sprintf(buffer, "%d", map[j][i].fCost);
-			//sfText_setString(mapText, buffer);
-			//sfText_setCharacterSize(mapText, 9);
-			//sfText_setPosition(mapText, addVectorsf(map[j][i].pos, vector2f(0.f, BLOCK_ORIGIN / 2.f)));
-			//tmpTextBounds = sfText_getLocalBounds(mapText);
-			//sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
-			//sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
 		}
 	}
 
@@ -157,15 +132,6 @@ void displayMap(Window* _window)
 
 		if (showValues)
 			displayValues(_window, openList, i);
-
-		//sfVertexArray_clear(mapVertexArray);
-		//
-		//mapVertex.position = map[openList[i].y][openList[i].x].pos;
-		//sfVertexArray_append(mapVertexArray, mapVertex);
-		//mapVertex.position = vector2f(map[map[openList[i].y][openList[i].x].parent.y][map[openList[i].y][openList[i].x].parent.x].pos.x / 1.f, map[map[openList[i].y][openList[i].x].parent.y][map[openList[i].y][openList[i].x].parent.x].pos.y / 1.f);
-		//sfVertexArray_append(mapVertexArray, mapVertex);
-		//
-		////sfRenderTexture_drawVertexArray(_window->renderTexture, mapVertexArray, NULL);
 	}
 
 	sfRectangleShape_setFillColor(mapRectangle, blockColor[TILE_CLOSED]);
@@ -177,20 +143,15 @@ void displayMap(Window* _window)
 
 		if (showValues)
 			displayValues(_window, closedList, i);
-
-		//sfVertexArray_clear(mapVertexArray);
-		//
-		//mapVertex.position = map[closedList[i].y][closedList[i].x].pos;
-		//sfVertexArray_append(mapVertexArray, mapVertex);
-		//mapVertex.position = vector2f(map[map[closedList[i].y][closedList[i].x].parent.y][map[closedList[i].y][closedList[i].x].parent.x].pos.x / 1.f, map[map[closedList[i].y][closedList[i].x].parent.y][map[closedList[i].y][closedList[i].x].parent.x].pos.y / 1.f);
-		//sfVertexArray_append(mapVertexArray, mapVertex);
-		//
-		////sfRenderTexture_drawVertexArray(_window->renderTexture, mapVertexArray, NULL);
-
 	}
 
 	if (nbNodes > 0) {
 		displayPath(_window);
+
+		sprintf(buffer, "NODES : %d", nbNodes);
+		sfText_setString(mapText, buffer);
+		sfText_setPosition(mapText, vector2f(WINDOW_LENGTH - 100.f, 100.f));
+		sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
 	}
 }
 
