@@ -2,10 +2,13 @@
 
 sfTime sftime;
 sfClock* sfclock;
+sfTime sftimeThread2;
+sfClock* sfclockThread2;
 
 void initTools()
 {
 	sfclock = sfClock_create();
+	sfclockThread2 = sfClock_create();
 	srand(time(NULL));
 }
 
@@ -17,6 +20,20 @@ void restartClock()
 float getDeltaTime()
 {
 	float dt = sfTime_asSeconds(sftime);
+	if (dt > 0.1f)
+		return 0.1f;
+
+	return dt;
+}
+
+void restartClockThread2()
+{
+	sftimeThread2 = sfClock_restart(sfclockThread2);
+}
+
+float getDeltaTimeThread2()
+{
+	float dt = sfTime_asSeconds(sftimeThread2);
 	if (dt > 0.1f)
 		return 0.1f;
 

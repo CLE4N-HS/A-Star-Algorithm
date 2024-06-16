@@ -1,8 +1,5 @@
 #include "windowManager.h"
-#include "map.h"
-#include "hud.h"
-#include "mouseManager.h"
-#include "keyboardManager.h"
+#include "game.h"
 
 sfSprite* windowSprite;
 sfTexture* windowTexture;
@@ -20,17 +17,14 @@ Window* windowSetup()
 	return window;
 }
 
-void initWindow()
+void initWindow(Window* _window)
 {
 	windowSprite = sfSprite_create();
 	windowTexture = sfTexture_create(WINDOW_LENGTH, WINDOW_HEIGHT);
 
 	initTools();
 	
-	initMap();
-	initHud();
-	initMouse();
-	initKeyboard();
+	initGame(_window);
 }
 
 void updateWindow(Window* _window)
@@ -45,11 +39,7 @@ void updateWindow(Window* _window)
 			_window->isDone = sfTrue;
 	}
 
-	updateMouse(_window);
-	updateKeyboard(_window);
-
-	updateMap(_window);
-	updateHud(_window);
+	updateGame(_window);
 }
 
 void displayWindow(Window* _window)
@@ -57,8 +47,7 @@ void displayWindow(Window* _window)
 	sfRenderWindow_clear(_window->renderWindow, sfBlack);
 	sfRenderTexture_clear(_window->renderTexture, sfBlack);
 
-	displayMap(_window);
-	displayHud(_window);
+	displayGame(_window);
 	
 	sfRenderTexture_display(_window->renderTexture);
 	sfSprite_setTexture(windowSprite, sfRenderTexture_getTexture(_window->renderTexture), sfTrue);

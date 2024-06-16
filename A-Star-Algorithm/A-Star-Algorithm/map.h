@@ -2,7 +2,7 @@
 #include "tools.h"
 #include "windowManager.h"
 
-#define BLOCK_SIZE 60.f
+#define DEFAULT_BLOCK_SIZE 60.f
 #define BLOCK_ORIGIN 30.f
 #define BLOCK_OUTLINE_THICKNESS 1.f
 #define BLOCK_LENGTH 62
@@ -63,3 +63,7 @@ void toggleValues();
 void displayList(Window* _window, sfVector2i* _list, int _i);
 void displayValues(Window* _window, sfVector2i* _list, int _i);
 void displayPath(Window* _window);
+float getBlockLength();
+float getBlockOrigin();
+float getBlockSize();
+void setBlockSize(float _blockSize);

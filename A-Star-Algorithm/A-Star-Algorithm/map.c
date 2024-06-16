@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "customMath.h"
 #include "keyboardManager.h"
+#include "game.h"
 
 Block** map;
 Block** savedMap;
@@ -20,6 +21,7 @@ sfVector2i currentNode = {0, 0};
 sfBool showOpenList;
 sfBool showClosedList;
 sfBool showValues;
+float blockSize;
 
 sfRectangleShape* mapRectangle;
 sfText* mapText;
@@ -30,11 +32,12 @@ sfColor blockColor[TILE_NB_MAX_TYPES];
 
 void initMap()
 {
+	blockSize = DEFAULT_BLOCK_SIZE;
 	loadMap();
 
 	mapRectangle = sfRectangleShape_create();
-	sfRectangleShape_setSize(mapRectangle, vector2f(BLOCK_SIZE, BLOCK_SIZE));
-	sfRectangleShape_setOrigin(mapRectangle, vector2f(BLOCK_ORIGIN, BLOCK_ORIGIN));
+	sfRectangleShape_setSize(mapRectangle, vector2f(blockSize, blockSize));
+	sfRectangleShape_setOrigin(mapRectangle, vector2f(getBlockOrigin(), getBlockOrigin()));
 	sfRectangleShape_setOutlineThickness(mapRectangle, BLOCK_OUTLINE_THICKNESS);
 	sfRectangleShape_setOutlineColor(mapRectangle, color(128, 128, 128));
 
@@ -87,6 +90,8 @@ void updateMap(Window* _window)
 		}
 	}
 
+	sfMutex_lock(gameMutex);
+
 	if (hasPressed(sfKeyZ) || isPressing(sfKeyUp))
 		changeMapSize(mapXSize, mapYSize - 1);
 	if (hasPressed(sfKeyQ) || isPressing(sfKeyLeft))
@@ -95,12 +100,15 @@ void updateMap(Window* _window)
 		changeMapSize(mapXSize, mapYSize + 1);
 	if (hasPressed(sfKeyD) || isPressing(sfKeyRight))
 		changeMapSize(mapXSize + 1, mapYSize);
+
+	sfMutex_unlock(gameMutex);
 }
 
 void displayMap(Window* _window)
 {
 	char buffer[30];
 
+	sfMutex_lock(gameMutex);
 	for (int j = 0; j < mapYSize; j++)
 	{
 		for (int i = 0; i < mapXSize; i++)
@@ -111,6 +119,7 @@ void displayMap(Window* _window)
 			sfRenderTexture_drawRectangleShape(_window->renderTexture, mapRectangle, NULL);
 		}
 	}
+	sfMutex_unlock(gameMutex);
 
 	sfRectangleShape_setPosition(mapRectangle, map[startIndex.y][startIndex.x].pos);
 	sfRectangleShape_setFillColor(mapRectangle, blockColor[TILE_START]);
@@ -327,7 +336,7 @@ void saveMap()
 
 void defaultMap()
 {
-	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN, WINDOW_HEIGHT / 1.75f - (float)mapYSize * BLOCK_LENGTH / 2.f + BLOCK_OUTLINE_THICKNESS + BLOCK_ORIGIN);
+	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * getBlockLength() / 2.f + BLOCK_OUTLINE_THICKNESS + getBlockOrigin(), WINDOW_HEIGHT / 1.75f - (float)mapYSize * getBlockLength() / 2.f + BLOCK_OUTLINE_THICKNESS + getBlockOrigin());
 
 	for (int j = 0; j < mapYSize; j++)
 	{
@@ -339,8 +348,8 @@ void defaultMap()
 			map[j][i].hCost = INT_MAX;
 			map[j][i].fCost = INT_MAX;
 			map[j][i].parent = NULLVECTOR2I;
-			map[j][i].pos = addVectorsf(offsetPos, V2iToV2f(vector2i(BLOCK_LENGTH * i, BLOCK_LENGTH * j)));
-			map[j][i].bounds = FloatRect(map[j][i].pos.x - BLOCK_ORIGIN, map[j][i].pos.y - BLOCK_ORIGIN, BLOCK_SIZE, BLOCK_SIZE);
+			map[j][i].pos = addVectorsf(offsetPos, V2iToV2f(vector2i(getBlockLength() * i, getBlockLength() * j)));
+			map[j][i].bounds = FloatRect(map[j][i].pos.x - getBlockOrigin(), map[j][i].pos.y - getBlockOrigin(), blockSize, blockSize);
 
 			savedMap[j][i] = map[j][i];
 		}
@@ -643,7 +652,7 @@ void displayValues(Window* _window, sfVector2i* _list, int _i)
 	sprintf(buffer, "%d", map[_list[_i].y][_list[_i].x].gCost);
 	sfText_setString(mapText, buffer);
 	sfText_setCharacterSize(mapText, 10);
-	sfText_setPosition(mapText, addVectorsf(map[_list[_i].y][_list[_i].x].pos, vector2f(-BLOCK_ORIGIN / 2.f, -BLOCK_ORIGIN / 2.f)));
+	sfText_setPosition(mapText, addVectorsf(map[_list[_i].y][_list[_i].x].pos, vector2f(-getBlockOrigin() / 2.f, -getBlockOrigin() / 2.f)));
 	tmpTextBounds = sfText_getLocalBounds(mapText);
 	sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
 	sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
@@ -651,7 +660,7 @@ void displayValues(Window* _window, sfVector2i* _list, int _i)
 	sprintf(buffer, "%d", map[_list[_i].y][_list[_i].x].hCost);
 	sfText_setString(mapText, buffer);
 	sfText_setCharacterSize(mapText, 10);
-	sfText_setPosition(mapText, addVectorsf(map[_list[_i].y][_list[_i].x].pos, vector2f(BLOCK_ORIGIN / 2.f, -BLOCK_ORIGIN / 2.f)));
+	sfText_setPosition(mapText, addVectorsf(map[_list[_i].y][_list[_i].x].pos, vector2f(getBlockOrigin() / 2.f, -getBlockOrigin() / 2.f)));
 	tmpTextBounds = sfText_getLocalBounds(mapText);
 	sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
 	sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
@@ -686,6 +695,43 @@ void displayPath(Window* _window)
 	sfVertexArray_append(mapVertexArray, mapVertex);
 
 	sfRenderTexture_drawVertexArray(_window->renderTexture, mapVertexArray, NULL);
+}
+
+float getBlockLength()
+{
+	return blockSize + BLOCK_OUTLINE_THICKNESS * 2.f;
+}
+
+float getBlockOrigin()
+{
+	return blockSize / 2.f;
+}
+
+float getBlockSize()
+{
+	return blockSize;
+}
+
+void setBlockSize(float _blockSize)
+{
+	blockSize = _blockSize;
+
+
+	sfVector2f offsetPos = vector2f(WINDOW_LENGTH / 2.f - (float)mapXSize * getBlockLength() / 2.f + BLOCK_OUTLINE_THICKNESS + getBlockOrigin(), WINDOW_HEIGHT / 1.75f - (float)mapYSize * getBlockLength() / 2.f + BLOCK_OUTLINE_THICKNESS + getBlockOrigin());
+
+	for (int j = 0; j < mapYSize; j++)
+	{
+		for (int i = 0; i < mapXSize; i++)
+		{
+			map[j][i].pos = addVectorsf(offsetPos, V2iToV2f(vector2i(getBlockLength() * i, getBlockLength() * j)));
+			map[j][i].bounds = FloatRect(map[j][i].pos.x - getBlockOrigin(), map[j][i].pos.y - getBlockOrigin(), blockSize, blockSize);
+
+			savedMap[j][i] = map[j][i];
+		}
+	}
+
+	sfRectangleShape_setSize(mapRectangle, vector2f(blockSize, blockSize));
+	sfRectangleShape_setOrigin(mapRectangle, vector2f(getBlockOrigin(), getBlockOrigin()));
 }
 
 sfVector2i* getPossibleCrossNeighbours(sfVector2i _closestIndex)

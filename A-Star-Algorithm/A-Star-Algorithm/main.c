@@ -4,7 +4,7 @@
 int main(int _argc, char** _argv)
 {
 	Window* window = windowSetup();
-	initWindow();
+	initWindow(window);
 
 	while (!isDone(window))
 	{

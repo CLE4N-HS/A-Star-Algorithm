@@ -15,6 +15,8 @@
 void initTools();
 void restartClock();
 float getDeltaTime();
+void restartClockThread2();
+float getDeltaTimeThread2();
 
 sfVector2f vector2f(float _x, float _y);
 sfVector2i vector2i(int _x, int _y);

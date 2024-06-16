@@ -15,6 +15,8 @@ typedef enum {
 	HUD_SHOW_OPEN_LIST,
 	HUD_SHOW_CLOSED_LIST,
 	HUD_SHOW_VALUES,
+	HUD_SIZE_MINUS,
+	HUD_SIZE_PLUS,
 	HUD_MAZE,
 	HUD_NB_MAX_TYPES
 }HudTypes;
@@ -31,6 +33,7 @@ sfText* hudText;
 
 TileType selectedType;
 char fpsBuffer[10];
+char fpsBufferThread2[10];
 
 void initHud()
 {
@@ -44,6 +47,8 @@ void initHud()
 	sfText_setFillColor(hudText, color(255, 255, 255));
 	sfText_setCharacterSize(hudText, 20);
 	sfText_setFont(hudText, sfFont_createFromFile(FONT_PATH"GingerSoda.ttf"));
+	sfText_setOutlineColor(hudText, color(0, 0, 0));
+	sfText_setOutlineThickness(hudText, 2.f);
 
 	hudTextString[HUD_PATH] = "Paths";
 	hudTextString[HUD_WALL] = "Walls";
@@ -57,6 +62,8 @@ void initHud()
 	hudTextString[HUD_SHOW_OPEN_LIST] = "OpenList";
 	hudTextString[HUD_SHOW_CLOSED_LIST] = "ClosedList";
 	hudTextString[HUD_SHOW_VALUES] = "Values";
+	hudTextString[HUD_SIZE_MINUS] = "Size-";
+	hudTextString[HUD_SIZE_PLUS] = "Size+";
 	hudTextString[HUD_MAZE] = "Maze";
 
 	hudBlockColor[HUD_PATH] = color(255, 255, 255);
@@ -71,6 +78,8 @@ void initHud()
 	hudBlockColor[HUD_SHOW_OPEN_LIST] = color(0, 0, 255);
 	hudBlockColor[HUD_SHOW_CLOSED_LIST] = color(200, 50, 50);
 	hudBlockColor[HUD_SHOW_VALUES] = color(0, 255, 100);
+	hudBlockColor[HUD_SIZE_MINUS] = color(75, 50, 25);
+	hudBlockColor[HUD_SIZE_PLUS] = color(250, 150, 50);
 	hudBlockColor[HUD_MAZE] = color(25, 50, 75);
 
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
@@ -101,14 +110,16 @@ void updateHud(Window* _window)
 
 				switch (i)
 				{
-				case HUD_SEARCH:           search();           break;
-				case HUD_SAVE:             saveMap();          break;
-				case HUD_RESET:            resetMap();         break;
-				case HUD_DEFAULT:          defaultMap();       break;
-				case HUD_FIND:             find();             break;
-				case HUD_SHOW_OPEN_LIST:   toggleOpenList();   break;
-				case HUD_SHOW_CLOSED_LIST: toggleClosedList(); break;
-				case HUD_SHOW_VALUES:      toggleValues();     break;
+				case HUD_SEARCH:           search();                           break;
+				case HUD_SAVE:             saveMap();                          break;
+				case HUD_RESET:            resetMap();                         break;
+				case HUD_DEFAULT:          defaultMap();                       break;
+				case HUD_FIND:             find();                             break;
+				case HUD_SHOW_OPEN_LIST:   toggleOpenList();                   break;
+				case HUD_SHOW_CLOSED_LIST: toggleClosedList();                 break;
+				case HUD_SHOW_VALUES:      toggleValues();                     break;
+				case HUD_SIZE_MINUS:       setBlockSize(getBlockSize() - 2.f); break;
+				case HUD_SIZE_PLUS:        setBlockSize(getBlockSize() + 2.f); break;
 				case HUD_MAZE:             /*toggleValues();*/     break;
 				default:
 					selectedType = i;
@@ -133,18 +144,6 @@ void displayHud(Window* _window)
 		sfRectangleShape_setFillColor(hudRectangle, hudBlockColor[i]);
 		sfRenderTexture_drawRectangleShape(_window->renderTexture, hudRectangle, NULL);
 	}
-
-	static float fpsTimer = 1.f;
-	fpsTimer += getDeltaTime();
-	if (fpsTimer > 0.2f) {
-		sprintf(fpsBuffer, "FPS : %.0f", 1.f / getDeltaTime());
-		fpsTimer = 0.f;
-	}
-
-
-	sfText_setString(hudText, fpsBuffer);
-	sfText_setPosition(hudText, vector2f(100.f, 100.f));
-	sfRenderTexture_drawText(_window->renderTexture, hudText, NULL);
 }
 
 TileType getSelectedType()
