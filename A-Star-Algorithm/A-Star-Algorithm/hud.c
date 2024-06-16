@@ -15,6 +15,7 @@ typedef enum {
 	HUD_SHOW_OPEN_LIST,
 	HUD_SHOW_CLOSED_LIST,
 	HUD_SHOW_VALUES,
+	HUD_MAZE,
 	HUD_NB_MAX_TYPES
 }HudTypes;
 
@@ -29,6 +30,7 @@ sfRectangleShape* hudRectangle;
 sfText* hudText;
 
 TileType selectedType;
+char fpsBuffer[10];
 
 void initHud()
 {
@@ -55,6 +57,7 @@ void initHud()
 	hudTextString[HUD_SHOW_OPEN_LIST] = "OpenList";
 	hudTextString[HUD_SHOW_CLOSED_LIST] = "ClosedList";
 	hudTextString[HUD_SHOW_VALUES] = "Values";
+	hudTextString[HUD_MAZE] = "Maze";
 
 	hudBlockColor[HUD_PATH] = color(255, 255, 255);
 	hudBlockColor[HUD_WALL] = color(0, 0, 0);
@@ -68,6 +71,7 @@ void initHud()
 	hudBlockColor[HUD_SHOW_OPEN_LIST] = color(0, 0, 255);
 	hudBlockColor[HUD_SHOW_CLOSED_LIST] = color(200, 50, 50);
 	hudBlockColor[HUD_SHOW_VALUES] = color(0, 255, 100);
+	hudBlockColor[HUD_MAZE] = color(25, 50, 75);
 
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
@@ -105,6 +109,7 @@ void updateHud(Window* _window)
 				case HUD_SHOW_OPEN_LIST:   toggleOpenList();   break;
 				case HUD_SHOW_CLOSED_LIST: toggleClosedList(); break;
 				case HUD_SHOW_VALUES:      toggleValues();     break;
+				case HUD_MAZE:             /*toggleValues();*/     break;
 				default:
 					selectedType = i;
 					break;
@@ -116,8 +121,6 @@ void updateHud(Window* _window)
 
 void displayHud(Window* _window)
 {
-	char buffer[30];
-
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
 		sfText_setString(hudText, hudTextString[i]);
@@ -131,8 +134,15 @@ void displayHud(Window* _window)
 		sfRenderTexture_drawRectangleShape(_window->renderTexture, hudRectangle, NULL);
 	}
 
-	sprintf(buffer, "FPS : %.0f", 1.f / getDeltaTime());
-	sfText_setString(hudText, buffer);
+	static float fpsTimer = 1.f;
+	fpsTimer += getDeltaTime();
+	if (fpsTimer > 0.2f) {
+		sprintf(fpsBuffer, "FPS : %.0f", 1.f / getDeltaTime());
+		fpsTimer = 0.f;
+	}
+
+
+	sfText_setString(hudText, fpsBuffer);
 	sfText_setPosition(hudText, vector2f(100.f, 100.f));
 	sfRenderTexture_drawText(_window->renderTexture, hudText, NULL);
 }

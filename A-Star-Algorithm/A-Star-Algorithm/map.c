@@ -500,7 +500,12 @@ void removeElementInOpenList(int _count)
 void find()
 {
 	savedMap = map;
+	free(openList);
+	free(closedList);
+	free(searchList);
 	openList = (sfVector2i*)calloc(1, sizeof(sfVector2i));
+	closedList = NULL;
+	searchList = NULL;
 	openList[0] = startIndex;
 	map[openList[0].y][openList[0].x].type = TILE_OPEN;
 	map[openList[0].y][openList[0].x].gCost = 0;
@@ -681,4 +686,49 @@ void displayPath(Window* _window)
 	sfVertexArray_append(mapVertexArray, mapVertex);
 
 	sfRenderTexture_drawVertexArray(_window->renderTexture, mapVertexArray, NULL);
+}
+
+sfVector2i* getPossibleCrossNeighbours(sfVector2i _closestIndex)
+{
+	sfVector2i* possibleNeighbours = (sfVector2i*)calloc(8, sizeof(sfVector2i));
+	possibleNeighbours[0] = vector2i(_closestIndex.x - 1, _closestIndex.y - 1); // Top Left
+	possibleNeighbours[1] = vector2i(_closestIndex.x, _closestIndex.y - 1); // Top
+	possibleNeighbours[2] = vector2i(_closestIndex.x + 1, _closestIndex.y - 1); // Top Right
+	possibleNeighbours[3] = vector2i(_closestIndex.x - 1, _closestIndex.y); // Middle Left
+	possibleNeighbours[4] = vector2i(_closestIndex.x + 1, _closestIndex.y); // Middle Right
+	possibleNeighbours[5] = vector2i(_closestIndex.x - 1, _closestIndex.y + 1); // Bottom Left
+	possibleNeighbours[6] = vector2i(_closestIndex.x, _closestIndex.y + 1); // Bottom
+	possibleNeighbours[7] = vector2i(_closestIndex.x + 1, _closestIndex.y + 1); // Bottom Right
+
+	return possibleNeighbours;
+}
+
+sfVector2i* getCrossNeighbours(sfVector2i* _possibleCrossNeighbours, int* _nbNeighbours)
+{
+	sfVector2i* neighbours = NULL;
+	for (int path = 0; path < 4; path++)
+	{
+		if (isIndexInArray(_possibleCrossNeighbours[path])) {
+			if (!isNodeSolid(_possibleCrossNeighbours[path]) && !isNodeInClosedList(_possibleCrossNeighbours[path])) {
+				*_nbNeighbours += 1;
+				neighbours = (sfVector2i*)realloc(neighbours, *_nbNeighbours * sizeof(sfVector2i));
+				neighbours[*_nbNeighbours - 1] = _possibleCrossNeighbours[path];
+			}
+		}
+	}
+	return neighbours;
+}
+
+void maze()
+{
+	defaultMap();
+
+	sfVector2i currentIndex = startIndex;
+
+
+
+	sfVector2i* possibleCrossNeighbours = getPossibleCrossNeighbours(currentIndex);
+
+	int nbNeighbours = 0;
+	sfVector2i* crossNeighbours = getCrossNeighbours(possibleCrossNeighbours, &nbNeighbours);
 }
