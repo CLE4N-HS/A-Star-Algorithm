@@ -120,7 +120,7 @@ void updateHud(Window* _window)
 				case HUD_SHOW_VALUES:      toggleValues();                     break;
 				case HUD_SIZE_MINUS:       setBlockSize(getBlockSize() - 2.f); break;
 				case HUD_SIZE_PLUS:        setBlockSize(getBlockSize() + 2.f); break;
-				case HUD_MAZE:             /*toggleValues();*/     break;
+				case HUD_MAZE:             maze();                             break;
 				default:
 					selectedType = i;
 					break;

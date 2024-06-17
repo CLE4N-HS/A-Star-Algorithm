@@ -23,6 +23,14 @@ sfBool showClosedList;
 sfBool showValues;
 float blockSize;
 
+// maze
+int subBlocks;
+sfVector2i* mazeStack;
+int nbMazeStackElements;
+sfVector2i* mazeOpenList;
+int nbMazeOpenListElements;
+//
+
 sfRectangleShape* mapRectangle;
 sfText* mapText;
 sfVertexArray* mapVertexArray;
@@ -33,6 +41,7 @@ sfColor blockColor[TILE_NB_MAX_TYPES];
 void initMap()
 {
 	blockSize = DEFAULT_BLOCK_SIZE;
+	subBlocks = 2;
 	loadMap();
 
 	mapRectangle = sfRectangleShape_create();
@@ -90,18 +99,20 @@ void updateMap(Window* _window)
 		}
 	}
 
-	sfMutex_lock(gameMutex);
+	if (!isPressing(sfKeyLShift)) {
+		sfMutex_lock(gameMutex);
 
-	if (hasPressed(sfKeyZ) || isPressing(sfKeyUp))
-		changeMapSize(mapXSize, mapYSize - 1);
-	if (hasPressed(sfKeyQ) || isPressing(sfKeyLeft))
-		changeMapSize(mapXSize - 1, mapYSize);
-	if (hasPressed(sfKeyS) || isPressing(sfKeyDown))
-		changeMapSize(mapXSize, mapYSize + 1);
-	if (hasPressed(sfKeyD) || isPressing(sfKeyRight))
-		changeMapSize(mapXSize + 1, mapYSize);
+		if (hasPressed(sfKeyZ) || isPressing(sfKeyUp))
+			changeMapSize(mapXSize, mapYSize - 1);
+		if (hasPressed(sfKeyQ) || isPressing(sfKeyLeft))
+			changeMapSize(mapXSize - 1, mapYSize);
+		if (hasPressed(sfKeyS) || isPressing(sfKeyDown))
+			changeMapSize(mapXSize, mapYSize + 1);
+		if (hasPressed(sfKeyD) || isPressing(sfKeyRight))
+			changeMapSize(mapXSize + 1, mapYSize);
 
-	sfMutex_unlock(gameMutex);
+		sfMutex_unlock(gameMutex);
+	}
 }
 
 void displayMap(Window* _window)
@@ -270,11 +281,8 @@ void search()
 		addNodeInClosedList(closestIndex);
 		
 
-		printf("%d, %d\n", closestIndex.x, closestIndex.y);
 		currentNode = closestIndex;
-		//putParentInClosedList(closestIndex);
 		if (equalsVectors2i(closestIndex, finishIndex)) {
-			printf("done !");
 			setSearchList();
 		}
 
@@ -564,11 +572,8 @@ void find()
 		addNodeInClosedList(closestIndex);
 
 
-		printf("%d, %d\n", closestIndex.x, closestIndex.y);
 		currentNode = closestIndex;
-		//putParentInClosedList(closestIndex);
 		if (equalsVectors2i(closestIndex, finishIndex)) {
-			printf("done !");
 			setSearchList();
 			return;
 		}
@@ -734,47 +739,139 @@ void setBlockSize(float _blockSize)
 	sfRectangleShape_setOrigin(mapRectangle, vector2f(getBlockOrigin(), getBlockOrigin()));
 }
 
-sfVector2i* getPossibleCrossNeighbours(sfVector2i _closestIndex)
+void setupMazeMap()
 {
-	sfVector2i* possibleNeighbours = (sfVector2i*)calloc(8, sizeof(sfVector2i));
-	possibleNeighbours[0] = vector2i(_closestIndex.x - 1, _closestIndex.y - 1); // Top Left
-	possibleNeighbours[1] = vector2i(_closestIndex.x, _closestIndex.y - 1); // Top
-	possibleNeighbours[2] = vector2i(_closestIndex.x + 1, _closestIndex.y - 1); // Top Right
-	possibleNeighbours[3] = vector2i(_closestIndex.x - 1, _closestIndex.y); // Middle Left
-	possibleNeighbours[4] = vector2i(_closestIndex.x + 1, _closestIndex.y); // Middle Right
-	possibleNeighbours[5] = vector2i(_closestIndex.x - 1, _closestIndex.y + 1); // Bottom Left
-	possibleNeighbours[6] = vector2i(_closestIndex.x, _closestIndex.y + 1); // Bottom
-	possibleNeighbours[7] = vector2i(_closestIndex.x + 1, _closestIndex.y + 1); // Bottom Right
+	for (int j = 0; j < mapYSize; j++)
+	{
+		for (int i = 0; i < mapXSize; i++)
+		{
+			map[j][i].type = TILE_WALL;
+		}
+	}
+
+	sfVector2i randomStartIndex = vector2i(rand() % mapXSize, rand() % mapYSize);
+	map[randomStartIndex.y][randomStartIndex.x].type = TILE_START;
+	map[mapYSize - 1][mapXSize - 1].type = TILE_FINISH;
+	startIndex = randomStartIndex;
+
+
+
+	free(mazeStack);
+	mazeStack = (sfVector2i*)calloc(1, sizeof(sfVector2i));
+	nbMazeStackElements = 1;
+	mazeStack[0] = startIndex;
+
+	free(mazeOpenList);
+	mazeOpenList = (sfVector2i*)calloc(1, sizeof(sfVector2i));
+	nbMazeOpenListElements = 1;
+	mazeOpenList[0] = mazeStack[0];
+}
+
+void maze()
+{
+	setupMazeMap();
+
+	while (mazeStack != NULL)
+	{
+		int currentStackElements = nbMazeStackElements - 1;
+		sfVector2i currentIndex = mazeStack[currentStackElements];
+
+
+		sfVector2i* possibleNeighbours = getPossibleMazeNeighbours(currentIndex);
+
+		int nbNeighbours = 0;
+		sfVector2i* neighbours = getMazeNeighbours(possibleNeighbours, &nbNeighbours);
+
+		if (nbNeighbours > 0) {
+			int chosenNeighbour = rand() % nbNeighbours;
+
+			addNodeToMazeStack(neighbours[chosenNeighbour]);
+			addNodeToMazeOpenList(neighbours[chosenNeighbour]);
+
+			if (neighbours[chosenNeighbour].x != currentIndex.x) {
+				sfBool isXNeighbourNegative = (neighbours[chosenNeighbour].x < currentIndex.x ? sfTrue : sfFalse);
+
+				for (int xSubBlockIndex = 1; xSubBlockIndex <= subBlocks; xSubBlockIndex++)
+				{
+					map[currentIndex.y][currentIndex.x + (isXNeighbourNegative ? -xSubBlockIndex : xSubBlockIndex)].type = TILE_PATH;
+				}
+			}
+
+			if (neighbours[chosenNeighbour].y != currentIndex.y) {
+				sfBool isYNeighbourNegative = (neighbours[chosenNeighbour].y < currentIndex.y ? sfTrue : sfFalse);
+
+				for (int ySubBlockIndex = 1; ySubBlockIndex <= subBlocks; ySubBlockIndex++)
+				{
+					map[currentIndex.y + (isYNeighbourNegative ? -ySubBlockIndex : ySubBlockIndex)][currentIndex.x].type = TILE_PATH;
+				}
+			}
+		}
+		else {
+			eraseMazeStackElement(currentStackElements);
+		}
+
+	}
+}
+
+sfVector2i* getPossibleMazeNeighbours(sfVector2i _currentIndex)
+{
+	sfVector2i* possibleNeighbours = (sfVector2i*)calloc(4, sizeof(sfVector2i));
+	possibleNeighbours[0] = vector2i(_currentIndex.x, _currentIndex.y - 1 * subBlocks); // Top
+	possibleNeighbours[1] = vector2i(_currentIndex.x - 1 * subBlocks, _currentIndex.y); // Left
+	possibleNeighbours[2] = vector2i(_currentIndex.x + 1 * subBlocks, _currentIndex.y); // Right
+	possibleNeighbours[3] = vector2i(_currentIndex.x, _currentIndex.y + 1 * subBlocks); // Bottom
 
 	return possibleNeighbours;
 }
 
-sfVector2i* getCrossNeighbours(sfVector2i* _possibleCrossNeighbours, int* _nbNeighbours)
+sfVector2i* getMazeNeighbours(sfVector2i* _possibleMazeNeighbours, int* _nbNeighbours)
 {
 	sfVector2i* neighbours = NULL;
 	for (int path = 0; path < 4; path++)
 	{
-		if (isIndexInArray(_possibleCrossNeighbours[path])) {
-			if (!isNodeSolid(_possibleCrossNeighbours[path]) && !isNodeInClosedList(_possibleCrossNeighbours[path])) {
+		if (isIndexInArray(_possibleMazeNeighbours[path])) {
+			if (!isNodeInMazeOpenList(_possibleMazeNeighbours[path])) {
 				*_nbNeighbours += 1;
 				neighbours = (sfVector2i*)realloc(neighbours, *_nbNeighbours * sizeof(sfVector2i));
-				neighbours[*_nbNeighbours - 1] = _possibleCrossNeighbours[path];
+				neighbours[*_nbNeighbours - 1] = _possibleMazeNeighbours[path];
 			}
 		}
 	}
 	return neighbours;
 }
 
-void maze()
+sfBool isNodeInMazeOpenList(sfVector2i _node)
 {
-	defaultMap();
+	for (int i = 0; i < nbMazeOpenListElements; i++)
+	{
+		if (equalsVectors2i(_node, mazeOpenList[i]))
+			return sfTrue;
+	}
 
-	sfVector2i currentIndex = startIndex;
+	return sfFalse;
+}
 
+void addNodeToMazeStack(sfVector2i _node)
+{
+	nbMazeStackElements++;
+	mazeStack = (sfVector2i*)realloc(mazeStack, nbMazeStackElements * sizeof(sfVector2i));
+	mazeStack[nbMazeStackElements - 1] = _node;
+}
 
+void addNodeToMazeOpenList(sfVector2i _node)
+{
+	nbMazeOpenListElements++;
+	mazeOpenList = (sfVector2i*)realloc(mazeOpenList, nbMazeOpenListElements * sizeof(sfVector2i));
+	mazeOpenList[nbMazeOpenListElements - 1] = _node;
+}
 
-	sfVector2i* possibleCrossNeighbours = getPossibleCrossNeighbours(currentIndex);
+void eraseMazeStackElement(int _element)
+{
+	for (int i = _element; i < nbMazeStackElements - 1; i++)
+	{
+		mazeStack[i] = mazeStack[i + 1];
+	}
 
-	int nbNeighbours = 0;
-	sfVector2i* crossNeighbours = getCrossNeighbours(possibleCrossNeighbours, &nbNeighbours);
+	nbMazeStackElements--;
+	mazeStack = (sfVector2i*)realloc(mazeStack, nbMazeStackElements * sizeof(sfVector2i));
 }
