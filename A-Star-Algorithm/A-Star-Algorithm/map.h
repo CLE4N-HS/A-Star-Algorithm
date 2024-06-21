@@ -75,3 +75,7 @@ sfBool isNodeInMazeOpenList(sfVector2i _node);
 void addNodeToMazeStack(sfVector2i _node);
 void addNodeToMazeOpenList(sfVector2i _node);
 void eraseMazeStackElement(int _element);
+void reduceMapSize();
+void increaseMapSize();
+void changeFrames();
+void displayFrames(Window* _window);

@@ -2,31 +2,13 @@
 #include "customMath.h"
 #include "mouseManager.h"
 
-typedef enum {
-	HUD_PATH = 0,
-	HUD_WALL,
-	HUD_START,
-	HUD_FINISH,
-	HUD_SEARCH,
-	HUD_SAVE,
-	HUD_RESET,
-	HUD_DEFAULT,
-	HUD_FIND,
-	HUD_SHOW_OPEN_LIST,
-	HUD_SHOW_CLOSED_LIST,
-	HUD_SHOW_VALUES,
-	HUD_SIZE_MINUS,
-	HUD_SIZE_PLUS,
-	HUD_MAZE,
-	HUD_NB_MAX_TYPES
-}HudTypes;
-
 sfVector2f hudBlockPos[HUD_NB_MAX_TYPES];
 sfColor hudBlockColor[HUD_NB_MAX_TYPES];
 char* hudTextString[HUD_NB_MAX_TYPES];
 sfVector2f hudTextPos[HUD_NB_MAX_TYPES];
 sfFloatRect hudBlockBounds[HUD_NB_MAX_TYPES];
-void (*hudBlockFunctions[8]) = { search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues };
+void (*hudBlockFunctions[HUD_NB_MAX_TYPES - HUD_FINISH])() = {search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues};
+HudTypes mapFunctionType;
 
 sfRectangleShape* hudRectangle;
 sfText* hudText;
@@ -37,6 +19,8 @@ char fpsBufferThread2[10];
 
 void initHud()
 {
+	mapFunctionType = HUD_NB_MAX_TYPES;
+
 	hudRectangle = sfRectangleShape_create();
 	sfRectangleShape_setSize(hudRectangle, vector2f(HUD_BLOCK_SIZE, HUD_BLOCK_SIZE));
 	sfRectangleShape_setOrigin(hudRectangle, vector2f(HUD_BLOCK_ORIGIN, HUD_BLOCK_ORIGIN));
@@ -65,6 +49,7 @@ void initHud()
 	hudTextString[HUD_SIZE_MINUS] = "Size-";
 	hudTextString[HUD_SIZE_PLUS] = "Size+";
 	hudTextString[HUD_MAZE] = "Maze";
+	hudTextString[HUD_FRAMES] = "Frames";
 
 	hudBlockColor[HUD_PATH] = color(255, 255, 255);
 	hudBlockColor[HUD_WALL] = color(0, 0, 0);
@@ -81,6 +66,7 @@ void initHud()
 	hudBlockColor[HUD_SIZE_MINUS] = color(75, 50, 25);
 	hudBlockColor[HUD_SIZE_PLUS] = color(250, 150, 50);
 	hudBlockColor[HUD_MAZE] = color(25, 50, 75);
+	hudBlockColor[HUD_FRAMES] = color(25, 50, 200);
 
 	for (int i = 0; i < HUD_NB_MAX_TYPES; i++)
 	{
@@ -102,11 +88,19 @@ void updateHud(Window* _window)
 	{
 		if (sfFloatRect_contains(&hudBlockBounds[i], mousePos.x, mousePos.y)) {
 			if (leftClick()) {
-				// doesnt work for some reasons
+				if (i >= HUD_SEARCH && getMapFunctionType() >= HUD_SEARCH)
+					setMapFunctionType(i - HUD_SEARCH);
+					//hudBlockFunctions[i - HUD_SEARCH]();
+				else
+					selectedType = i;
+
+				continue;
+
 				//if (i >= HUD_SEARCH)
-				//	hudBlockFunctions[i - HUD_SEARCH];
+				//	hudBlockFunctions[i - HUD_SEARCH]();
 				//else
 				//	selectedType = i;
+				//continue;
 
 				switch (i)
 				{
@@ -149,4 +143,14 @@ void displayHud(Window* _window)
 TileType getSelectedType()
 {
 	return selectedType;
+}
+
+void setMapFunctionType(HudTypes _type)
+{
+	mapFunctionType = _type;
+}
+
+HudTypes getMapFunctionType()
+{
+	return mapFunctionType;
 }

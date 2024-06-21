@@ -1,9 +1,9 @@
 #include "map.h"
 #include "mouseManager.h"
-#include "hud.h"
 #include "customMath.h"
 #include "keyboardManager.h"
 #include "game.h"
+#include "hud.h"
 
 Block** map;
 Block** savedMap;
@@ -23,13 +23,19 @@ sfBool showClosedList;
 sfBool showValues;
 float blockSize;
 
+void (*mapFunctions[HUD_NB_MAX_TYPES - HUD_SEARCH])() = { search, saveMap, resetMap, defaultMap, find, toggleOpenList, toggleClosedList, toggleValues, reduceMapSize, increaseMapSize, maze, changeFrames};
+
 // maze
 int subBlocks;
 sfVector2i* mazeStack;
 int nbMazeStackElements;
 sfVector2i* mazeOpenList;
 int nbMazeOpenListElements;
+sfVector2i currentIndex;
 //
+
+float timeBetweenFrames;
+char mapStringBuffer[30];
 
 sfRectangleShape* mapRectangle;
 sfText* mapText;
@@ -42,6 +48,8 @@ void initMap()
 {
 	blockSize = DEFAULT_BLOCK_SIZE;
 	subBlocks = 2;
+	currentIndex = NULLVECTOR2I;
+	timeBetweenFrames = 0.f;
 	loadMap();
 
 	mapRectangle = sfRectangleShape_create();
@@ -65,11 +73,11 @@ void initMap()
 	blockColor[TILE_FINISH] = color(255, 0, 0);
 	blockColor[TILE_OPEN] = color(0, 0, 255);
 	blockColor[TILE_CLOSED] = color(200, 50, 50);
-	blockColor[TILE_CURRENT] = color(0, 127, 255);
+	blockColor[TILE_CURRENT] = color(255, 0, 255);
 
 	showOpenList = sfTrue;
 	showClosedList = sfTrue;
-	showValues = sfTrue;
+	showValues = sfFalse;
 }
 
 void updateMap(Window* _window)
@@ -100,8 +108,6 @@ void updateMap(Window* _window)
 	}
 
 	if (!isPressing(sfKeyLShift)) {
-		sfMutex_lock(gameMutex);
-
 		if (hasPressed(sfKeyZ) || isPressing(sfKeyUp))
 			changeMapSize(mapXSize, mapYSize - 1);
 		if (hasPressed(sfKeyQ) || isPressing(sfKeyLeft))
@@ -110,16 +116,19 @@ void updateMap(Window* _window)
 			changeMapSize(mapXSize, mapYSize + 1);
 		if (hasPressed(sfKeyD) || isPressing(sfKeyRight))
 			changeMapSize(mapXSize + 1, mapYSize);
+	}
 
-		sfMutex_unlock(gameMutex);
+	HudTypes tmpMapFunctionType = getMapFunctionType();
+	if (tmpMapFunctionType < HUD_NB_MAX_TYPES) {
+		mapFunctions[tmpMapFunctionType]();
+		setMapFunctionType(HUD_NB_MAX_TYPES);
 	}
 }
 
 void displayMap(Window* _window)
 {
-	char buffer[30];
-
 	sfMutex_lock(gameMutex);
+
 	for (int j = 0; j < mapYSize; j++)
 	{
 		for (int i = 0; i < mapXSize; i++)
@@ -130,6 +139,7 @@ void displayMap(Window* _window)
 			sfRenderTexture_drawRectangleShape(_window->renderTexture, mapRectangle, NULL);
 		}
 	}
+
 	sfMutex_unlock(gameMutex);
 
 	sfRectangleShape_setPosition(mapRectangle, map[startIndex.y][startIndex.x].pos);
@@ -165,14 +175,32 @@ void displayMap(Window* _window)
 			displayValues(_window, closedList, i);
 	}
 
+	sfMutex_lock(gameMutex);
+	HudTypes tmpMapFunctionType = getMapFunctionType() + HUD_SEARCH;
+	switch (tmpMapFunctionType)
+	{
+	case HUD_FIND:
+	case HUD_MAZE:
+		sfRectangleShape_setPosition(mapRectangle, map[currentIndex.y][currentIndex.x].pos);
+		sfRectangleShape_setFillColor(mapRectangle, blockColor[TILE_CURRENT]);
+
+		sfRenderTexture_drawRectangleShape(_window->renderTexture, mapRectangle, NULL);
+		break;
+	default:
+		break;
+	}
+	sfMutex_unlock(gameMutex);
+
 	if (nbNodes > 0) {
 		displayPath(_window);
 
-		sprintf(buffer, "NODES : %d", nbNodes);
-		sfText_setString(mapText, buffer);
-		sfText_setPosition(mapText, vector2f(WINDOW_LENGTH - 100.f, 100.f));
+		sprintf(mapStringBuffer, "NODES : %d", nbNodes);
+		sfText_setString(mapText, mapStringBuffer);
+		sfText_setPosition(mapText, vector2f(WINDOW_LENGTH - 100.f, 20.f));
 		sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
 	}
+
+	displayFrames(_window);
 }
 
 void loadMap()
@@ -422,9 +450,11 @@ sfBool isNodeSolid(sfVector2i _node)
 
 void addNodeInOpenList(sfVector2i _node)
 {
+	sfMutex_lock(gameMutex);
 	nbOpenListElements++;
 	openList = (sfVector2i*)realloc(openList, nbOpenListElements * sizeof(sfVector2i));
 	openList[nbOpenListElements - 1] = _node;
+	sfMutex_unlock(gameMutex);
 }
 
 sfBool isNodeInOpenList(sfVector2i _node)
@@ -473,9 +503,11 @@ int getDistanceFromParent(sfVector2i _neighbour, sfVector2i _parent)
 
 void addNodeInClosedList(sfVector2i _node)
 {
+	sfMutex_lock(gameMutex);
 	nbClosedListElements++;
 	closedList = (sfVector2i*)realloc(closedList, nbClosedListElements * sizeof(sfVector2i));
 	closedList[nbClosedListElements - 1] = _node;
+	sfMutex_unlock(gameMutex);
 }
 
 sfBool isNodeInClosedList(sfVector2i _node)
@@ -491,6 +523,8 @@ sfBool isNodeInClosedList(sfVector2i _node)
 
 void setSearchList()
 {
+	sfMutex_lock(gameMutex);
+
 	sfVector2i parent = openList[nbOpenListElements - 1];
 	nbNodes = 0;
 	searchList = NULL;
@@ -501,10 +535,13 @@ void setSearchList()
 		searchList[nbNodes - 1] = parent;
 		parent = map[parent.y][parent.x].parent;
 	}
+
+	sfMutex_unlock(gameMutex);
 }
 
 void removeElementInOpenList(int _count)
 {
+	sfMutex_lock(gameMutex);
 	for (int i = _count; i < nbOpenListElements - 1; i++)
 	{
 		openList[i] = openList[i + 1];
@@ -512,6 +549,7 @@ void removeElementInOpenList(int _count)
 
 	nbOpenListElements--;
 	openList = (sfVector2i*)realloc(openList, nbOpenListElements * sizeof(openList));
+	sfMutex_unlock(gameMutex);
 }
 
 void find()
@@ -530,9 +568,19 @@ void find()
 	nbClosedListElements = 0;
 	nbNodes = 0;
 
+	float findTimer = 0.f;
+
 	while (openList != NULL) {
-		sfVector2i closestIndex = openList[0];
-		int lowestFCost = map[closestIndex.y][closestIndex.x].fCost;
+		//findTimer += getDeltaTimeThread2();
+		findTimer += getDeltaTime();
+
+		if (findTimer > timeBetweenFrames)
+			findTimer = 0.f;
+		else
+			continue;
+
+		currentIndex = openList[0];
+		int lowestFCost = map[currentIndex.y][currentIndex.x].fCost;
 		sfVector2i* equalFCosts = NULL;
 		int nbEqualFCosts = 0;
 		int count = 0;
@@ -547,7 +595,7 @@ void find()
 				counts[nbEqualFCosts - 1] = i;
 			}
 			else if (map[openList[i].y][openList[i].x].fCost < lowestFCost) {
-				closestIndex = openList[i];
+				currentIndex = openList[i];
 				lowestFCost = map[openList[i].y][openList[i].x].fCost;
 				nbEqualFCosts = 0;
 				count = i;
@@ -555,37 +603,39 @@ void find()
 		}
 
 		if (nbEqualFCosts > 0) {
-			closestIndex = equalFCosts[0];
+			currentIndex = equalFCosts[0];
 			int lowestHCost = map[equalFCosts[0].y][equalFCosts[0].x].hCost;
 			count = counts[0];
 			for (int i = 1; i < nbEqualFCosts; i++)
 			{
 				if (map[equalFCosts[i].y][equalFCosts[i].x].hCost < lowestHCost) {
 					lowestHCost = map[equalFCosts[i].y][equalFCosts[i].x].hCost;
-					closestIndex = equalFCosts[i];
+					currentIndex = equalFCosts[i];
 					count = counts[i];
 				}
 			}
 		}
 
 		removeElementInOpenList(count);
-		addNodeInClosedList(closestIndex);
+		addNodeInClosedList(currentIndex);
 
 
-		currentNode = closestIndex;
-		if (equalsVectors2i(closestIndex, finishIndex)) {
+		currentNode = currentIndex;
+		if (equalsVectors2i(currentIndex, finishIndex)) {
 			setSearchList();
 			return;
 		}
+		if (nbOpenListElements > 0)
+			setSearchList();
 
 		free(equalFCosts);
 
-		sfVector2i* possibleNeighbours = getPossibleNeighbours(closestIndex);
+		sfVector2i* possibleNeighbours = getPossibleNeighbours(currentIndex);
 
 		int nbNeighbours = 0;
 		sfVector2i* neighbours = getNeighbours(possibleNeighbours, &nbNeighbours);
 
-		setNeighboursValues(neighbours, nbNeighbours, closestIndex);
+		setNeighboursValues(neighbours, nbNeighbours, currentIndex);
 
 
 
@@ -598,6 +648,8 @@ void find()
 
 void changeMapSize(int _mapXSize, int _mapYSize)
 {
+	sfMutex_lock(gameMutex);
+
 	if (_mapXSize > 1130 || _mapXSize < 1 || _mapYSize > 1113 || _mapYSize < 1)
 		return;
 
@@ -626,6 +678,8 @@ void changeMapSize(int _mapXSize, int _mapYSize)
 	//	map[j] = (Block*)realloc(map, mapXSize * sizeof(Block));
 	//	savedMap[j] = (Block*)realloc(map, mapXSize * sizeof(Block));
 	//}
+
+	sfMutex_unlock(gameMutex);
 }
 
 void toggleOpenList()
@@ -651,6 +705,8 @@ void displayList(Window* _window, sfVector2i* _list, int _i)
 
 void displayValues(Window* _window, sfVector2i* _list, int _i)
 {
+	sfMutex_lock(gameMutex);
+
 	char buffer[13];
 	sfFloatRect tmpTextBounds = FloatRect(0.f, 0.f, 0.f, 0.f);
 
@@ -677,17 +733,19 @@ void displayValues(Window* _window, sfVector2i* _list, int _i)
 	tmpTextBounds = sfText_getLocalBounds(mapText);
 	sfText_setOrigin(mapText, vector2f(tmpTextBounds.width / 2.f, tmpTextBounds.height));
 	sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
+
+	sfMutex_unlock(gameMutex);
 }
 
 void displayPath(Window* _window)
 {
 	sfVertexArray_clear(mapVertexArray);
 
-	mapVertex.position = map[finishIndex.y][finishIndex.x].pos;
-	sfVertexArray_append(mapVertexArray, mapVertex);
-	mapVertex.position = map[searchList[0].y][searchList[0].x].pos;
-	sfVertexArray_append(mapVertexArray, mapVertex);
-	for (int i = 1; i < nbNodes; i++)
+	//mapVertex.position = map[finishIndex.y][finishIndex.x].pos;
+	//sfVertexArray_append(mapVertexArray, mapVertex);
+	//mapVertex.position = map[searchList[0].y][searchList[0].x].pos;
+	//sfVertexArray_append(mapVertexArray, mapVertex);
+	for (int i = 2; i < nbNodes; i++)
 	{
 		mapVertex.position = map[searchList[i].y][searchList[i].x].pos;
 		sfVertexArray_append(mapVertexArray, mapVertex);
@@ -771,10 +829,20 @@ void maze()
 {
 	setupMazeMap();
 
+	float mazeTimer = 0.f;
+
 	while (mazeStack != NULL)
 	{
+		mazeTimer += getDeltaTimeThread2();
+
+		if (mazeTimer > timeBetweenFrames)
+			mazeTimer = 0.f;
+		else
+			continue;
+
+
 		int currentStackElements = nbMazeStackElements - 1;
-		sfVector2i currentIndex = mazeStack[currentStackElements];
+		currentIndex = mazeStack[currentStackElements];
 
 
 		sfVector2i* possibleNeighbours = getPossibleMazeNeighbours(currentIndex);
@@ -853,20 +921,25 @@ sfBool isNodeInMazeOpenList(sfVector2i _node)
 
 void addNodeToMazeStack(sfVector2i _node)
 {
+	sfMutex_lock(gameMutex);
 	nbMazeStackElements++;
 	mazeStack = (sfVector2i*)realloc(mazeStack, nbMazeStackElements * sizeof(sfVector2i));
 	mazeStack[nbMazeStackElements - 1] = _node;
+	sfMutex_unlock(gameMutex);
 }
 
 void addNodeToMazeOpenList(sfVector2i _node)
 {
+	sfMutex_lock(gameMutex);
 	nbMazeOpenListElements++;
 	mazeOpenList = (sfVector2i*)realloc(mazeOpenList, nbMazeOpenListElements * sizeof(sfVector2i));
 	mazeOpenList[nbMazeOpenListElements - 1] = _node;
+	sfMutex_unlock(gameMutex);
 }
 
 void eraseMazeStackElement(int _element)
 {
+	sfMutex_lock(gameMutex);
 	for (int i = _element; i < nbMazeStackElements - 1; i++)
 	{
 		mazeStack[i] = mazeStack[i + 1];
@@ -874,4 +947,44 @@ void eraseMazeStackElement(int _element)
 
 	nbMazeStackElements--;
 	mazeStack = (sfVector2i*)realloc(mazeStack, nbMazeStackElements * sizeof(sfVector2i));
+	sfMutex_unlock(gameMutex);
+}
+
+void reduceMapSize()
+{
+	setBlockSize(getBlockSize() - 2.f);
+}
+
+void increaseMapSize()
+{
+	setBlockSize(getBlockSize() + 2.f);
+}
+
+void changeFrames()
+{
+	timeBetweenFrames = 0.f;
+	while (!isPressing(sfKeyEnter))
+	{
+		for (sfKeyCode key = sfKeyNumpad0; key <= sfKeyNumpad9; key++)
+		{
+			if (hasPressed(key) && timeBetweenFrames < 1000000.f) {
+				timeBetweenFrames *= 10.f;
+				timeBetweenFrames += (float)(key - sfKeyNumpad0);
+			}
+		}
+
+		if (hasPressed(sfKeyBackspace)) {
+			int iTimeBetweenFrames = (int)timeBetweenFrames;
+			iTimeBetweenFrames /= 10;
+			timeBetweenFrames = (float)iTimeBetweenFrames;
+		}
+	}
+}
+
+void displayFrames(Window* _window)
+{
+	sprintf(mapStringBuffer, "Time Between Frames : %.0f", timeBetweenFrames);
+	sfText_setString(mapText, mapStringBuffer);
+	sfText_setPosition(mapText, vector2f(WINDOW_LENGTH - 300.f, 160.f));
+	sfRenderTexture_drawText(_window->renderTexture, mapText, NULL);
 }
