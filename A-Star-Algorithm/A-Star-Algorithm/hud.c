@@ -88,7 +88,7 @@ void updateHud(Window* _window)
 	{
 		if (sfFloatRect_contains(&hudBlockBounds[i], mousePos.x, mousePos.y)) {
 			if (leftClick()) {
-				if (i >= HUD_SEARCH && getMapFunctionType() >= HUD_SEARCH)
+				if ((i >= HUD_SEARCH && getMapFunctionType() >= HUD_SEARCH) || i == HUD_SEARCH)
 					setMapFunctionType(i - HUD_SEARCH);
 					//hudBlockFunctions[i - HUD_SEARCH]();
 				else

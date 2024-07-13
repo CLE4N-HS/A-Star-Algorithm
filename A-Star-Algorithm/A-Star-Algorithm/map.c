@@ -119,7 +119,7 @@ void updateMap(Window* _window)
 	}
 
 	HudTypes tmpMapFunctionType = getMapFunctionType();
-	if (tmpMapFunctionType < HUD_NB_MAX_TYPES) {
+	if (tmpMapFunctionType < HUD_NB_MAX_TYPES && tmpMapFunctionType != HUD_FRAMES) {
 		mapFunctions[tmpMapFunctionType]();
 		setMapFunctionType(HUD_NB_MAX_TYPES);
 	}
@@ -962,23 +962,24 @@ void increaseMapSize()
 
 void changeFrames()
 {
-	timeBetweenFrames = 0.f;
+	float tmpTime = 0.f;
 	while (!isPressing(sfKeyEnter))
 	{
 		for (sfKeyCode key = sfKeyNumpad0; key <= sfKeyNumpad9; key++)
 		{
-			if (hasPressed(key) && timeBetweenFrames < 1000000.f) {
-				timeBetweenFrames *= 10.f;
-				timeBetweenFrames += (float)(key - sfKeyNumpad0);
+			if (hasPressed(key) && tmpTime < 1000000.f) {
+				tmpTime *= 10.f;
+				tmpTime += (float)(key - sfKeyNumpad0);
 			}
 		}
 
 		if (hasPressed(sfKeyBackspace)) {
-			int iTimeBetweenFrames = (int)timeBetweenFrames;
+			int iTimeBetweenFrames = (int)tmpTime;
 			iTimeBetweenFrames /= 10;
-			timeBetweenFrames = (float)iTimeBetweenFrames;
+			tmpTime = (float)iTimeBetweenFrames;
 		}
 	}
+	timeBetweenFrames = tmpTime;
 }
 
 void displayFrames(Window* _window)

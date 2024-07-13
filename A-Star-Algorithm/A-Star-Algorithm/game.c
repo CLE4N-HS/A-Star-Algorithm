@@ -5,6 +5,7 @@
 #include "keyboardManager.h"
 
 sfThread* gameThread;
+sfThread* fpsThread;
 
 sfText* gameText;
 char fpsBuffer[10];
@@ -14,6 +15,9 @@ void initGame(Window* _window)
 {
 	gameMutex = sfMutex_create();
 	gameThread = sfThread_create(updateGameThread, _window);
+
+	fpsMutex = sfMutex_create();
+	fpsThread = sfThread_create(updateFpsThread, _window);
 
 	gameText = sfText_create();
 	sfText_setFont(gameText, sfFont_createFromFile(FONT_PATH"GingerSoda.ttf"));
@@ -30,6 +34,7 @@ void initGame(Window* _window)
 	initKeyboard();
 
 	sfThread_launch(gameThread);
+	sfThread_launch(fpsThread);
 }
 
 void updateGame(Window* _window)
@@ -49,6 +54,20 @@ void updateGameThread(Window* _window)
 
 		updateMap(_window);
 		updateFPSThread2();
+	}
+}
+
+void updateFpsThread(Window* _window)
+{
+	while (1) // peak programming loop again
+	{
+		HudTypes tmpType = getMapFunctionType();
+
+		if (tmpType == HUD_FRAMES)
+		{
+			changeFrames();
+			setMapFunctionType(HUD_NB_MAX_TYPES);
+		}
 	}
 }
 
@@ -81,6 +100,7 @@ void updateFPSThread2()
 
 void displayFPS(Window* _window)
 {
+	return;
 	sfText_setString(gameText, fpsBuffer);
 	sfText_setPosition(gameText, vector2f(30.f, 30.f));
 	sfRenderTexture_drawText(_window->renderTexture, gameText, NULL);
